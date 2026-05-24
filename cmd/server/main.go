@@ -123,6 +123,8 @@ func registerRoutes(v1 *gin.RouterGroup, jwtSecret string, authH *handler.AuthHa
 	admin.GET("/auth/me", adminH.GetMe)
 	admin.PATCH("/auth/me", adminH.UpdateMe)
 	admin.GET("/stats/overview", adminH.StatsOverview)
+	admin.GET("/admins", adminH.ListAdmins)
+	admin.POST("/admins", adminH.CreateAdmin)
 	admin.GET("/users", userH.AdminListUsers)
 	admin.GET("/users/:id", userH.AdminGetUser)
 	admin.POST("/users", userH.AdminCreateUser)

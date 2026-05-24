@@ -36,3 +36,12 @@ func (r *AdminRepo) GetByID(ctx context.Context, id uint) (*domain.Admin, error)
 	}
 	return &admin, nil
 }
+
+// List returns all admins ordered by creation date desc.
+func (r *AdminRepo) List(ctx context.Context) ([]domain.Admin, error) {
+	var admins []domain.Admin
+	if err := r.db.WithContext(ctx).Order("created_at desc").Find(&admins).Error; err != nil {
+		return nil, err
+	}
+	return admins, nil
+}

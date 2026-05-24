@@ -2,12 +2,15 @@ package service
 
 import (
 	"context"
+	"errors"
+	"strings"
 	"time"
 
 	"le-studio-api/internal/domain"
 	"le-studio-api/internal/dto"
 	"le-studio-api/internal/repository"
 
+	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
 
@@ -104,6 +107,36 @@ func (s *AdminService) UpdateProfile(ctx context.Context, id uint, payload dto.U
 		admin.PhotoURL = payload.PhotoURL
 	}
 	if err := s.db.WithContext(ctx).Save(admin).Error; err != nil {
+		return nil, err
+	}
+	return admin, nil
+}
+
+// ListAdmins returns all admin accounts.
+func (s *AdminService) ListAdmins(ctx context.Context) ([]domain.Admin, error) {
+	return s.repos.Admins.List(ctx)
+}
+
+// CreateAdmin creates a new admin account.
+func (s *AdminService) CreateAdmin(ctx context.Context, payload dto.RegisterAdminDTO) (*domain.Admin, error) {
+	email := strings.ToLower(strings.TrimSpace(payload.Email))
+	if _, err := s.repos.Admins.FindByEmail(ctx, email); err == nil {
+		return nil, gorm.ErrDuplicatedKey
+	} else if !errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, err
+	}
+
+	passwordHash, err := bcrypt.GenerateFromPassword([]byte(payload.Password), bcrypt.DefaultCost)
+	if err != nil {
+		return nil, err
+	}
+
+	admin := &domain.Admin{
+		Name:         strings.TrimSpace(payload.Name),
+		Email:        email,
+		PasswordHash: string(passwordHash),
+	}
+	if err := s.repos.Admins.Create(ctx, admin); err != nil {
 		return nil, err
 	}
 	return admin, nil

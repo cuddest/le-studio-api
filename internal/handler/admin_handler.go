@@ -77,3 +77,37 @@ func (h *AdminHandler) UpdateMe(c *gin.Context) {
 	}
 	response.OK(c, admin)
 }
+
+// ListAdmins returns all admin accounts.
+func (h *AdminHandler) ListAdmins(c *gin.Context) {
+	admins, err := h.svc.ListAdmins(c.Request.Context())
+	if err != nil {
+		response.Error(c, http.StatusInternalServerError, "ADMIN_LIST_FAILED", "Unable to load admins.", nil)
+		return
+	}
+	response.OK(c, admins)
+}
+
+// CreateAdmin creates a new admin account from dashboard.
+func (h *AdminHandler) CreateAdmin(c *gin.Context) {
+	var payload dto.RegisterAdminDTO
+	if err := c.ShouldBindJSON(&payload); err != nil {
+		response.Error(c, http.StatusBadRequest, "INVALID_PAYLOAD", "Invalid payload.", nil)
+		return
+	}
+	if err := h.v.Struct(payload); err != nil {
+		response.Error(c, http.StatusBadRequest, "VALIDATION_FAILED", "Validation failed.", err)
+		return
+	}
+
+	admin, err := h.svc.CreateAdmin(c.Request.Context(), payload)
+	if err != nil {
+		if errors.Is(err, gorm.ErrDuplicatedKey) {
+			response.Error(c, http.StatusConflict, "EMAIL_EXISTS", "Admin email already registered.", nil)
+			return
+		}
+		response.Error(c, http.StatusInternalServerError, "ADMIN_CREATE_FAILED", "Unable to create admin.", nil)
+		return
+	}
+	response.Created(c, admin)
+}
