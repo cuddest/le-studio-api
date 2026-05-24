@@ -55,7 +55,7 @@ func main() {
 	attendanceSvc := service.NewAttendanceService(repos)
 	adminSvc := service.NewAdminService(repos, db)
 
-	authH := handler.NewAuthHandler(authSvc, v)
+	authH := handler.NewAuthHandler(authSvc, v, cfg.AdminSetupKey)
 	userH := handler.NewUserHandler(userSvc, v)
 	coachH := handler.NewCoachHandler(coachSvc, v)
 	trainingH := handler.NewTrainingTypeHandler(trainingSvc, v)
@@ -113,6 +113,7 @@ func registerRoutes(v1 *gin.RouterGroup, jwtSecret string, authH *handler.AuthHa
 	protected.PATCH("/bookings/:id/cancel", bookingH.Cancel)
 
 	adminAuth := v1.Group("/admin/auth")
+	adminAuth.POST("/register", authH.AdminRegister)
 	adminAuth.POST("/login", authH.AdminLogin)
 	adminAuth.POST("/refresh", authH.Refresh)
 	adminAuth.POST("/logout", authH.Logout)

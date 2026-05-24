@@ -98,6 +98,36 @@ func (s *AuthService) AdminLogin(ctx context.Context, payload dto.LoginDTO, user
 	return accessToken, refreshToken, admin, nil
 }
 
+// AdminRegister creates a new admin account and issues tokens.
+func (s *AuthService) AdminRegister(ctx context.Context, payload dto.RegisterAdminDTO, userAgent, ip string) (string, string, *domain.Admin, error) {
+	email := strings.ToLower(strings.TrimSpace(payload.Email))
+	if _, err := s.repos.Admins.FindByEmail(ctx, email); err == nil {
+		return "", "", nil, gorm.ErrDuplicatedKey
+	} else if !errors.Is(err, gorm.ErrRecordNotFound) {
+		return "", "", nil, err
+	}
+
+	passwordHash, err := bcrypt.GenerateFromPassword([]byte(payload.Password), bcrypt.DefaultCost)
+	if err != nil {
+		return "", "", nil, err
+	}
+
+	admin := &domain.Admin{
+		Name:         strings.TrimSpace(payload.Name),
+		Email:        email,
+		PasswordHash: string(passwordHash),
+	}
+	if err := s.repos.Admins.Create(ctx, admin); err != nil {
+		return "", "", nil, err
+	}
+
+	accessToken, refreshToken, err := s.issueTokens(ctx, admin.ID, "admin", admin.Email, userAgent, ip)
+	if err != nil {
+		return "", "", nil, err
+	}
+	return accessToken, refreshToken, admin, nil
+}
+
 // Refresh rotates refresh token and returns new access/refresh tokens.
 func (s *AuthService) Refresh(ctx context.Context, refreshToken, userAgent, ip string) (string, string, uint, string, error) {
 	hash := jwt.HashToken(refreshToken)

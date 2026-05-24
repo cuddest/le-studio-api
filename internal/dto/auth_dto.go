@@ -9,6 +9,13 @@ type RegisterDTO struct {
 	Phone     string `json:"phone"`
 }
 
+// RegisterAdminDTO defines admin registration payload.
+type RegisterAdminDTO struct {
+	Name     string `json:"name" validate:"required,min=2,max=80"`
+	Email    string `json:"email" validate:"required,email"`
+	Password string `json:"password" validate:"required,min=8"`
+}
+
 // LoginDTO defines login payload.
 type LoginDTO struct {
 	Email    string `json:"email" validate:"required,email"`

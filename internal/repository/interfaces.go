@@ -9,6 +9,7 @@ import (
 
 // AdminRepository defines admin data access.
 type AdminRepository interface {
+	Create(ctx context.Context, admin *domain.Admin) error
 	FindByEmail(ctx context.Context, email string) (*domain.Admin, error)
 	GetByID(ctx context.Context, id uint) (*domain.Admin, error)
 }

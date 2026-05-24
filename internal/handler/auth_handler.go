@@ -15,13 +15,14 @@ import (
 
 // AuthHandler serves auth endpoints.
 type AuthHandler struct {
-	svc *service.AuthService
-	v   *validator.Validate
+	svc           *service.AuthService
+	v             *validator.Validate
+	adminSetupKey string
 }
 
 // NewAuthHandler creates AuthHandler.
-func NewAuthHandler(svc *service.AuthService, v *validator.Validate) *AuthHandler {
-	return &AuthHandler{svc: svc, v: v}
+func NewAuthHandler(svc *service.AuthService, v *validator.Validate, adminSetupKey string) *AuthHandler {
+	return &AuthHandler{svc: svc, v: v, adminSetupKey: adminSetupKey}
 }
 
 // Register handles registration.
@@ -143,4 +144,39 @@ func (h *AuthHandler) AdminLogin(c *gin.Context) {
 		return
 	}
 	response.OK(c, gin.H{"access_token": access, "refresh_token": refresh, "admin": admin})
+}
+
+// AdminRegister handles admin account creation.
+// Guarded by x-admin-setup-key header matching ADMIN_SETUP_KEY.
+func (h *AuthHandler) AdminRegister(c *gin.Context) {
+	if h.adminSetupKey == "" {
+		response.Error(c, http.StatusForbidden, "ADMIN_REGISTRATION_DISABLED", "Admin registration is disabled.", nil)
+		return
+	}
+	if c.GetHeader("x-admin-setup-key") != h.adminSetupKey {
+		response.Error(c, http.StatusForbidden, "FORBIDDEN", "Invalid admin setup key.", nil)
+		return
+	}
+
+	var payload dto.RegisterAdminDTO
+	if err := c.ShouldBindJSON(&payload); err != nil {
+		response.Error(c, http.StatusBadRequest, "INVALID_PAYLOAD", "Invalid payload.", nil)
+		return
+	}
+	if err := h.v.Struct(payload); err != nil {
+		response.Error(c, http.StatusBadRequest, "VALIDATION_FAILED", "Validation failed.", err)
+		return
+	}
+
+	access, refresh, admin, err := h.svc.AdminRegister(c.Request.Context(), payload, c.Request.UserAgent(), c.ClientIP())
+	if err != nil {
+		if errors.Is(err, gorm.ErrDuplicatedKey) {
+			response.Error(c, http.StatusConflict, "EMAIL_EXISTS", "Admin email already registered.", nil)
+			return
+		}
+		response.Error(c, http.StatusInternalServerError, "ADMIN_REGISTER_FAILED", "Unable to create admin account.", nil)
+		return
+	}
+
+	response.Created(c, gin.H{"access_token": access, "refresh_token": refresh, "admin": admin})
 }

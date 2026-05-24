@@ -24,6 +24,7 @@ type Config struct {
 	CloudinaryCloudName  string
 	CloudinaryAPIKey     string
 	CloudinaryAPISecret  string
+	AdminSetupKey        string
 	AllowedOrigins       []string
 }
 
@@ -47,6 +48,7 @@ func Load() (Config, error) {
 		CloudinaryCloudName:  get("CLOUDINARY_CLOUD_NAME", ""),
 		CloudinaryAPIKey:     get("CLOUDINARY_API_KEY", ""),
 		CloudinaryAPISecret:  get("CLOUDINARY_API_SECRET", ""),
+		AdminSetupKey:        get("ADMIN_SETUP_KEY", ""),
 		AllowedOrigins:       strings.Split(get("ALLOWED_ORIGINS", "*"), ","),
 	}, nil
 }
