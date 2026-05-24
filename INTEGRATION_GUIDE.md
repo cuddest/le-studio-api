@@ -199,22 +199,21 @@ POST   /api/v1/admin/attendance           Mark attendance
 | **API Client** | ✅ Ready | `adminApiClient.js` properly configured |
 | **Environment** | ✅ Configured | `.env.local` set with API base URL |
 | **Login Page** | ✅ Working | Connects to real backend, tries `admin@example.com` / `admin123` |
-| **Dashboard** | ⚠️  Partial | Data still from `mockDashboard.js`, needs replacement with `/admin/stats/overview` |
-| **Users Page** | ⚠️  Partial | Data still from `mockUsers.js`, needs `/admin/users` endpoint |
-| **Coaches Page** | ⚠️  Partial | Still using mock, needs `/admin/coaches` endpoint |
-| **Schedule Page** | ⚠️  Partial | Still using mock, needs `/admin/schedules` endpoint |
-| **Bookings Page** | ⚠️  Partial | Still using mock, needs `/admin/bookings` endpoint |
+| **Dashboard** | ✅ Connected | Uses `/admin/stats/overview` and `/admin/bookings` |
+| **Users Page** | ✅ Connected | Uses `/admin/users` |
+| **Coaches Page** | ✅ Connected | Uses `/admin/coaches` |
+| **Schedule Page** | ✅ Connected | Uses `/admin/schedules` and `/admin/training-types` |
+| **Bookings Page** | ✅ Connected | Uses `/admin/bookings` |
 
 **What's Done:**
 - Environment configuration
 - Real JWT auth flow (no more fake tokens)
 - API client setup with Bearer token
+- Mock data fixtures removed from `src/admin/data/*`
 
 **What's Next:**
-- Replace all mock data imports with real API calls
-- Add error handling for API failures
-- Add loading states during API requests
-- Implement token refresh logic
+- Add richer optimistic UI and inline validation for CRUD forms
+- Add integration/e2e tests for admin CRUD flows
 
 ### Client Frontend (le-studio-front)
 | Component | Status | Notes |
@@ -224,21 +223,22 @@ POST   /api/v1/admin/attendance           Mark attendance
 | **Environment** | ✅ Configured | `.env` set with API base URL |
 | **Login Page** | ✅ Working | Connects to real backend |
 | **Register Page** | ✅ Working | Connects to real backend, creates real user accounts |
-| **Profile Page** | ⚠️  Partial | Still uses `getMockDashboard()`, needs `/users/me` endpoint |
-| **Classes Page** | ⚠️  Partial | Hardcoded list, needs `/training-types` endpoint |
-| **Coaches Page** | ⚠️  Partial | Hardcoded list, needs `/coaches` endpoint |
-| **Booking Page** | ⚠️  Partial | Simplified flow, needs full `/api/v1/bookings` integration |
+| **Profile Page** | ✅ Connected | Uses API-backed dashboard service (`/users/me`, `/bookings`) |
+| **Classes Page** | ✅ Connected | Uses real API-backed content |
+| **Coaches Page** | ✅ Connected | Uses real API-backed content |
+| **Booking Page** | ✅ Connected | Uses live booking resources |
 
 **What's Done:**
 - Environment configuration
 - Real JWT auth flow
 - API client setup with Bearer token
 - Login/Register connected to live API
+- Mock dashboard service replaced with API dashboard service
+- Automatic token refresh and request retry on `401`
 
 **What's Next:**
-- Update all data-fetching pages to use real endpoints
-- Implement proper loading/error states
-- Add token refresh on 401 responses
+- Add stronger UX fallback states for flaky network conditions
+- Add e2e coverage for profile + booking lifecycle
 
 ---
 
@@ -315,55 +315,72 @@ curl -X GET https://le-studio-api.onrender.com/api/v1/coaches
   - `refreshUserToken()` now calls `POST /auth/refresh`
   - `logoutUser()` now calls `POST /auth/logout`
 
+- **Modified:** `le-studio-front/src/services/dashboardService.js`
+   - Replaced mock dashboard data with API-based dashboard loader
+   - Reads `/users/me` and `/bookings` and maps into profile dashboard cards
+
+- **Modified:** `le-studio-front/src/services/apiClient.js`
+   - Added automatic token refresh flow on `401`
+   - Retries the original request once after refresh
+
+- **Modified:** `le-studio-front/src/context/AuthContext.jsx`
+   - Persists refresh token alongside access token
+
+- **Modified:** `le-studio-front/src/services/authStorage.js`
+   - Added refresh token storage helpers
+
+### CI/CD
+- **Created:** `le-studio-api/.github/workflows/ci.yml`
+   - Runs `go test ./...` and `go build ./cmd/server` on push/PR
+
+- **Created:** `le-studio-api/.github/workflows/production-smoke.yml`
+   - Runs scheduled/manual production smoke checks against live API
+
+- **Created:** `le-studio-api/scripts/production_smoke_test.sh`
+   - Public endpoint checks + optional protected admin check
+
+- **Created:** `le-studio-front/.github/workflows/ci.yml`
+   - Runs `npm ci`, `npm run lint`, `npm run build`
+
+- **Created:** `le-studio-admin/.github/workflows/ci.yml`
+   - Runs `npm ci`, `npm run lint`, `npm run build`
+
 ---
 
+## CI/CD Setup
+
+### Repository Secrets
+Configure these GitHub repository secrets:
+
+For `le-studio-api`:
+- `API_BASE_URL` (example: `https://le-studio-api.onrender.com`)
+- `ADMIN_EMAIL` (optional, for protected smoke checks)
+- `ADMIN_PASSWORD` (optional, for protected smoke checks)
+
+For `le-studio-front`:
+- `VITE_API_BASE` (example: `https://le-studio-api.onrender.com/api/v1`)
+
+For `le-studio-admin`:
+- `NEXT_PUBLIC_ADMIN_API_BASE` (example: `https://le-studio-api.onrender.com/api/v1`)
+
+### Workflows Added
+- API CI: `.github/workflows/ci.yml`
+- API production smoke: `.github/workflows/production-smoke.yml`
+- Frontend CI: `.github/workflows/ci.yml`
+- Admin CI: `.github/workflows/ci.yml`
+
+### Local Verification Commands
+```bash
+cd le-studio-api && go test ./...
+cd le-studio-api && BASE_URL="https://le-studio-api.onrender.com" bash scripts/production_smoke_test.sh
+cd le-studio-front && npm ci && npm run build
+cd le-studio-admin && npm ci && npm run build
+```
+
 ## Next Steps
-
-### Immediate (Within Current Sprint)
-1. **Admin Frontend - Replace Mock Data**
-   - Dashboard: Replace with `GET /admin/stats/overview`
-   - Users: Replace with `GET /admin/users`
-   - Coaches: Replace with `GET /admin/coaches`
-   - Schedule: Replace with `GET /admin/schedules`
-   - Update all page components to use `adminApiClient()`
-
-2. **Client Frontend - Add Missing Endpoints**
-   - Profile: Fetch from `GET /users/me`
-   - Classes: Fetch from `GET /training-types`
-   - Coaches: Fetch from `GET /coaches`
-   - Implement full booking workflow with `POST /bookings`
-
-3. **Error Handling & Loading States**
-   - Add loading indicators during API calls
-   - Display meaningful error messages
-   - Implement retry logic for failed requests
-
-### Medium Term (Week 2-3)
-1. **Token Refresh Logic**
-   - Auto-refresh access token when expired
-   - Handle 401 responses with token refresh attempt
-   - Clear auth and redirect to login on permanent auth failure
-
-2. **Data Validation**
-   - Add client-side validation before API calls
-   - Handle server validation errors gracefully
-   - Show validation error messages to users
-
-3. **Caching & Performance**
-   - Implement response caching for public endpoints
-   - Add pagination for large result sets
-   - Optimize re-renders with proper state management
-
-### Long Term (Week 4+)
-1. **Advanced Features**
-   - Real-time updates using WebSockets
-   - Image upload for coaches/profile photos
-   - PDF generation for bookings/receipts
-
-2. **CI/CD Integration**
-   - Automated testing for frontend API calls
-   - Deployment pipelines for both frontends
-   - Environment-specific builds
+1. Add e2e tests for user booking lifecycle and admin management workflows.
+2. Add branch protection requiring all CI workflows to pass before merge.
+3. Add deploy checks for frontend hosts (Vercel previews + health checks).
 
 ---
 
