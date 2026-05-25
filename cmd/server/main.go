@@ -12,6 +12,7 @@ import (
 	"le-studio-api/internal/repository"
 	pgrepo "le-studio-api/internal/repository/postgres"
 	"le-studio-api/internal/service"
+	"le-studio-api/pkg/cloudinary"
 	"le-studio-api/pkg/database"
 	"le-studio-api/pkg/response"
 
@@ -55,9 +56,15 @@ func main() {
 	attendanceSvc := service.NewAttendanceService(repos)
 	adminSvc := service.NewAdminService(repos, db)
 
+	cldClient, err := cloudinary.New(cfg.CloudinaryCloudName, cfg.CloudinaryAPIKey, cfg.CloudinaryAPISecret)
+	if err != nil {
+		logger.Warn("cloudinary initialization failed", zap.Error(err))
+	}
+
 	authH := handler.NewAuthHandler(authSvc, v, cfg.AdminSetupKey)
 	userH := handler.NewUserHandler(userSvc, v)
 	coachH := handler.NewCoachHandler(coachSvc, v)
+	coachH.SetCloudinaryClient(cldClient)
 	trainingH := handler.NewTrainingTypeHandler(trainingSvc, v)
 	tplH := handler.NewPackTemplateHandler(tplSvc, v)
 	upH := handler.NewUserPackHandler(upSvc, v)
@@ -138,6 +145,7 @@ func registerRoutes(v1 *gin.RouterGroup, jwtSecret string, authH *handler.AuthHa
 	admin.PATCH("/coaches/:id", coachH.AdminUpdate)
 	admin.DELETE("/coaches/:id", coachH.AdminDelete)
 	admin.PATCH("/coaches/:id/toggle-active", coachH.AdminToggleActive)
+	admin.POST("/coaches/:id/photo", coachH.AdminUploadPhoto)
 	admin.POST("/training-types", trainingH.AdminCreate)
 	admin.PATCH("/training-types/:id", trainingH.AdminUpdate)
 	admin.DELETE("/training-types/:id", trainingH.AdminDelete)

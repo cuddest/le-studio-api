@@ -51,11 +51,21 @@ func (s *CoachService) Update(ctx context.Context, id uint, payload dto.CreateCo
 	if err != nil {
 		return nil, err
 	}
-	coach.FirstName = payload.FirstName
-	coach.LastName = payload.LastName
-	coach.Bio = payload.Bio
-	coach.PhotoURL = payload.PhotoURL
-	coach.Specialties = payload.Specialties
+	if payload.FirstName != "" {
+		coach.FirstName = payload.FirstName
+	}
+	if payload.LastName != "" {
+		coach.LastName = payload.LastName
+	}
+	if payload.Bio != "" {
+		coach.Bio = payload.Bio
+	}
+	if payload.PhotoURL != "" {
+		coach.PhotoURL = payload.PhotoURL
+	}
+	if payload.Specialties != "" {
+		coach.Specialties = payload.Specialties
+	}
 	if payload.IsActive != nil {
 		coach.IsActive = *payload.IsActive
 	}

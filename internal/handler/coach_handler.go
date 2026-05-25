@@ -8,6 +8,7 @@ import (
 
 	"le-studio-api/internal/dto"
 	"le-studio-api/internal/service"
+	"le-studio-api/pkg/cloudinary"
 	"le-studio-api/pkg/response"
 
 	"github.com/gin-gonic/gin"
@@ -19,11 +20,17 @@ import (
 type CoachHandler struct {
 	svc *service.CoachService
 	v   *validator.Validate
+	cld *cloudinary.Client
 }
 
 // NewCoachHandler creates CoachHandler.
 func NewCoachHandler(svc *service.CoachService, v *validator.Validate) *CoachHandler {
 	return &CoachHandler{svc: svc, v: v}
+}
+
+// SetCloudinaryClient sets the cloudinary client for photo uploads.
+func (h *CoachHandler) SetCloudinaryClient(cld *cloudinary.Client) {
+	h.cld = cld
 }
 
 func (h *CoachHandler) List(c *gin.Context) {
@@ -120,4 +127,39 @@ func (h *CoachHandler) AdminToggleActive(c *gin.Context) {
 		return
 	}
 	response.OK(c, coach)
+}
+
+func (h *CoachHandler) AdminUploadPhoto(c *gin.Context) {
+	if h.cld == nil {
+		response.Error(c, http.StatusServiceUnavailable, "CLOUDINARY_ERROR", "File upload service unavailable.", nil)
+		return
+	}
+
+	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
+	if err != nil {
+		response.Error(c, http.StatusBadRequest, "INVALID_ID", "Invalid id.", nil)
+		return
+	}
+
+	file, err := c.FormFile("photo")
+	if err != nil {
+		response.Error(c, http.StatusBadRequest, "INVALID_FILE", "No file provided.", nil)
+		return
+	}
+
+	// Upload to Cloudinary
+	photoURL, err := h.cld.UploadFile(c.Request.Context(), file)
+	if err != nil {
+		response.Error(c, http.StatusInternalServerError, "UPLOAD_FAILED", err.Error(), nil)
+		return
+	}
+
+	// Update coach with photo URL
+	coach, err := h.svc.Update(c.Request.Context(), uint(id), dto.CreateCoachDTO{PhotoURL: photoURL})
+	if err != nil {
+		response.Error(c, http.StatusInternalServerError, "COACH_UPDATE_FAILED", "Unable to update coach.", nil)
+		return
+	}
+
+	response.OK(c, gin.H{"photo_url": photoURL, "coach": coach})
 }
