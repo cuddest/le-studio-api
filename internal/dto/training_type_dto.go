@@ -7,4 +7,5 @@ type TrainingTypeDTO struct {
 	Description string `json:"description"`
 	Color       string `json:"color"`
 	IsActive    *bool  `json:"is_active"`
+	ParentID    *uint  `json:"parent_id"`
 }

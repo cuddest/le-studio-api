@@ -30,7 +30,7 @@ func (s *BookingService) Create(ctx context.Context, userID uint, payload dto.Cr
 	var created *domain.Booking
 	if err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		var slot domain.Slot
-		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).First(&slot, payload.SlotID).Error; err != nil {
+		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).Preload("TrainingType").Preload("TrainingType.Parent").First(&slot, payload.SlotID).Error; err != nil {
 			return err
 		}
 		if slot.IsCancelled {
@@ -41,7 +41,7 @@ func (s *BookingService) Create(ctx context.Context, userID uint, payload dto.Cr
 		}
 
 		var pack domain.UserPack
-		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).First(&pack, payload.UserPackID).Error; err != nil {
+		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).Preload("PackTemplate").Preload("PackTemplate.TrainingTypes").First(&pack, payload.UserPackID).Error; err != nil {
 			return err
 		}
 		if pack.UserID != userID {
@@ -52,6 +52,31 @@ func (s *BookingService) Create(ctx context.Context, userID uint, payload dto.Cr
 		}
 		if pack.IsExhausted() || pack.Status != "active" {
 			return errors.New("pack has no remaining sessions")
+		}
+
+		// Validate pack includes the slot's training type (or one of its parent types)
+		allowed := false
+		allowedMap := map[uint]bool{}
+		if pack.PackTemplate.ID != 0 {
+			for _, t := range pack.PackTemplate.TrainingTypes {
+				allowedMap[t.ID] = true
+			}
+			// if pack template has a single TrainingTypeID (legacy), include it too
+			if pack.PackTemplate.TrainingTypeID != 0 {
+				allowedMap[pack.PackTemplate.TrainingTypeID] = true
+			}
+		}
+		// walk up slot training type parents
+		p := &slot.TrainingType
+		for p != nil {
+			if allowedMap[p.ID] {
+				allowed = true
+				break
+			}
+			p = p.Parent
+		}
+		if !allowed {
+			return errors.New("pack does not include this training type")
 		}
 
 		booking := &domain.Booking{

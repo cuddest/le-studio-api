@@ -16,7 +16,9 @@ type UserPackService struct {
 }
 
 // NewUserPackService creates user pack service.
-func NewUserPackService(repos repository.Repositories) *UserPackService { return &UserPackService{repos: repos} }
+func NewUserPackService(repos repository.Repositories) *UserPackService {
+	return &UserPackService{repos: repos}
+}
 
 // Purchase creates a pack for user.
 func (s *UserPackService) Purchase(ctx context.Context, userID uint, payload dto.CreateUserPackDTO) (*domain.UserPack, error) {

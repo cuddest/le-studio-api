@@ -30,6 +30,7 @@ func (r *BookingRepo) GetByID(ctx context.Context, id uint) (*domain.Booking, er
 		Preload("Slot.TrainingType").
 		Preload("UserPack").
 		Preload("UserPack.PackTemplate").
+		Preload("UserPack.PackTemplate.TrainingTypes").
 		First(&booking, id).Error; err != nil {
 		return nil, err
 	}
@@ -44,6 +45,8 @@ func (r *BookingRepo) ListByUser(ctx context.Context, userID uint) ([]domain.Boo
 		Preload("Slot.Coach").
 		Preload("Slot.TrainingType").
 		Preload("UserPack").
+		Preload("UserPack.PackTemplate").
+		Preload("UserPack.PackTemplate.TrainingTypes").
 		Where("user_id = ?", userID).
 		Order("created_at desc").
 		Find(&bookings).Error; err != nil {
@@ -66,6 +69,7 @@ func (r *BookingRepo) List(ctx context.Context, params pagination.Params) ([]dom
 		Preload("Slot.TrainingType").
 		Preload("UserPack").
 		Preload("UserPack.PackTemplate").
+		Preload("UserPack.PackTemplate.TrainingTypes").
 		Order("created_at desc").
 		Limit(params.Limit).
 		Offset(params.Offset).

@@ -6,6 +6,12 @@ import (
 	"gorm.io/gorm"
 )
 
+const (
+	SlotTypeMixte     = "mixte"
+	SlotTypeWomenOnly = "women_only"
+	SlotTypeMenOnly   = "men_only"
+)
+
 // Slot represents one bookable session.
 type Slot struct {
 	gorm.Model
@@ -15,6 +21,7 @@ type Slot struct {
 	TrainingType     TrainingType   `gorm:"foreignKey:TrainingTypeID"`
 	CoachID          uint           `gorm:"not null;index"`
 	Coach            Coach          `gorm:"foreignKey:CoachID"`
+	SlotType         string         `gorm:"not null;default:mixte;index"`
 	Name             string         `gorm:"not null"`
 	DayOfWeek        int            `gorm:"not null"`
 	Date             time.Time      `gorm:"not null;index:idx_slot_schedule_date,priority:2"`

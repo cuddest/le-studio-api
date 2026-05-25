@@ -19,11 +19,11 @@ import (
 
 // AuthService handles auth workflows.
 type AuthService struct {
-	repos              repository.Repositories
-	db                 *gorm.DB
-	jwtSecret          string
-	accessTokenTTL     time.Duration
-	refreshTokenTTL    time.Duration
+	repos           repository.Repositories
+	db              *gorm.DB
+	jwtSecret       string
+	accessTokenTTL  time.Duration
+	refreshTokenTTL time.Duration
 }
 
 // NewAuthService creates auth service.

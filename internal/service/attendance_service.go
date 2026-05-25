@@ -15,7 +15,9 @@ type AttendanceService struct {
 }
 
 // NewAttendanceService creates attendance service.
-func NewAttendanceService(repos repository.Repositories) *AttendanceService { return &AttendanceService{repos: repos} }
+func NewAttendanceService(repos repository.Repositories) *AttendanceService {
+	return &AttendanceService{repos: repos}
+}
 
 // Mark creates attendance record.
 func (s *AttendanceService) Mark(ctx context.Context, adminID uint, payload dto.MarkAttendanceDTO) (*domain.Attendance, error) {

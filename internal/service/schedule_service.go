@@ -15,7 +15,9 @@ type ScheduleService struct {
 }
 
 // NewScheduleService creates schedule service.
-func NewScheduleService(repos repository.Repositories) *ScheduleService { return &ScheduleService{repos: repos} }
+func NewScheduleService(repos repository.Repositories) *ScheduleService {
+	return &ScheduleService{repos: repos}
+}
 
 // List returns schedules.
 func (s *ScheduleService) List(ctx context.Context, includeUnpublished bool) ([]domain.WeeklySchedule, error) {
@@ -81,6 +83,7 @@ func (s *ScheduleService) CreateSlot(ctx context.Context, scheduleID uint, paylo
 		WeeklyScheduleID: scheduleID,
 		TrainingTypeID:   payload.TrainingTypeID,
 		CoachID:          payload.CoachID,
+		SlotType:         payload.SlotType,
 		Name:             payload.Name,
 		Date:             payload.Date,
 		StartTime:        payload.StartTime,
@@ -103,6 +106,7 @@ func (s *ScheduleService) UpdateSlot(ctx context.Context, id uint, payload dto.C
 	}
 	slot.TrainingTypeID = payload.TrainingTypeID
 	slot.CoachID = payload.CoachID
+	slot.SlotType = payload.SlotType
 	slot.Name = payload.Name
 	slot.Date = payload.Date
 	slot.StartTime = payload.StartTime

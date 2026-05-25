@@ -38,6 +38,7 @@ type CoachRepository interface {
 type TrainingTypeRepository interface {
 	Create(ctx context.Context, training *domain.TrainingType) error
 	GetByID(ctx context.Context, id uint) (*domain.TrainingType, error)
+	GetByIDs(ctx context.Context, ids []uint) ([]domain.TrainingType, error)
 	List(ctx context.Context, includeInactive bool) ([]domain.TrainingType, error)
 	Update(ctx context.Context, training *domain.TrainingType) error
 	Delete(ctx context.Context, id uint) error

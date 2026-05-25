@@ -56,6 +56,9 @@ func (h *TrainingTypeHandler) AdminCreate(c *gin.Context) {
 		Color:       payload.Color,
 		IsActive:    true,
 	}
+	if payload.ParentID != nil {
+		training.ParentID = payload.ParentID
+	}
 	if payload.IsActive != nil {
 		training.IsActive = *payload.IsActive
 	}
@@ -96,6 +99,7 @@ func (h *TrainingTypeHandler) AdminUpdate(c *gin.Context) {
 	training.Name = payload.Name
 	training.Description = payload.Description
 	training.Color = payload.Color
+	training.ParentID = payload.ParentID
 	if payload.IsActive != nil {
 		training.IsActive = *payload.IsActive
 	}

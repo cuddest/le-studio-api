@@ -22,7 +22,7 @@ func (r *PackTemplateRepo) Create(ctx context.Context, tpl *domain.PackTemplate)
 // GetByID returns pack template by id.
 func (r *PackTemplateRepo) GetByID(ctx context.Context, id uint) (*domain.PackTemplate, error) {
 	var tpl domain.PackTemplate
-	if err := r.db.WithContext(ctx).Preload("TrainingType").First(&tpl, id).Error; err != nil {
+	if err := r.db.WithContext(ctx).Preload("TrainingType").Preload("TrainingTypes").First(&tpl, id).Error; err != nil {
 		return nil, err
 	}
 	return &tpl, nil
@@ -30,7 +30,7 @@ func (r *PackTemplateRepo) GetByID(ctx context.Context, id uint) (*domain.PackTe
 
 // List returns pack templates.
 func (r *PackTemplateRepo) List(ctx context.Context, includeInactive bool) ([]domain.PackTemplate, error) {
-	query := r.db.WithContext(ctx).Preload("TrainingType").Order("display_order asc")
+	query := r.db.WithContext(ctx).Preload("TrainingType").Preload("TrainingTypes").Order("display_order asc")
 	if !includeInactive {
 		query = query.Where("is_active = ?", true)
 	}
@@ -43,7 +43,15 @@ func (r *PackTemplateRepo) List(ctx context.Context, includeInactive bool) ([]do
 
 // Update saves pack template.
 func (r *PackTemplateRepo) Update(ctx context.Context, tpl *domain.PackTemplate) error {
-	return r.db.WithContext(ctx).Save(tpl).Error
+	tx := r.db.WithContext(ctx)
+	if err := tx.Save(tpl).Error; err != nil {
+		return err
+	}
+	// replace training types association if set
+	if err := tx.Model(tpl).Association("TrainingTypes").Replace(tpl.TrainingTypes); err != nil {
+		return err
+	}
+	return nil
 }
 
 // Delete removes pack template.

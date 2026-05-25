@@ -41,6 +41,20 @@ func (s *PackTemplateService) Create(ctx context.Context, payload dto.CreatePack
 	if payload.IsActive != nil {
 		tpl.IsActive = *payload.IsActive
 	}
+	// attach training types if provided
+	var ids []uint
+	if len(payload.TrainingTypeIDs) > 0 {
+		ids = payload.TrainingTypeIDs
+	} else if payload.TrainingTypeID != 0 {
+		ids = []uint{payload.TrainingTypeID}
+	}
+	if len(ids) > 0 {
+		types, err := s.repos.Training.GetByIDs(ctx, ids)
+		if err != nil {
+			return nil, err
+		}
+		tpl.TrainingTypes = types
+	}
 	if err := s.repos.Templates.Create(ctx, tpl); err != nil {
 		return nil, err
 	}
@@ -60,6 +74,20 @@ func (s *PackTemplateService) Update(ctx context.Context, id uint, payload dto.C
 	tpl.DisplayOrder = payload.DisplayOrder
 	if payload.IsActive != nil {
 		tpl.IsActive = *payload.IsActive
+	}
+	// update many-to-many training types
+	var ids []uint
+	if len(payload.TrainingTypeIDs) > 0 {
+		ids = payload.TrainingTypeIDs
+	} else if payload.TrainingTypeID != 0 {
+		ids = []uint{payload.TrainingTypeID}
+	}
+	if len(ids) > 0 {
+		types, err := s.repos.Training.GetByIDs(ctx, ids)
+		if err != nil {
+			return nil, err
+		}
+		tpl.TrainingTypes = types
 	}
 	if err := s.repos.Templates.Update(ctx, tpl); err != nil {
 		return nil, err

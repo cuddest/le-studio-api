@@ -13,6 +13,7 @@ type CreateScheduleDTO struct {
 type CreateSlotDTO struct {
 	TrainingTypeID uint      `json:"training_type_id" validate:"required"`
 	CoachID        uint      `json:"coach_id" validate:"required"`
+	SlotType       string    `json:"slot_type" validate:"required,oneof=mixte women_only men_only"`
 	Name           string    `json:"name" validate:"required,min=2,max=100"`
 	Date           time.Time `json:"date" validate:"required"`
 	StartTime      time.Time `json:"start_time" validate:"required"`

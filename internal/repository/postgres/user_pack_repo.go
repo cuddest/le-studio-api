@@ -23,7 +23,7 @@ func (r *UserPackRepo) Create(ctx context.Context, pack *domain.UserPack) error 
 // GetByID returns user pack by id.
 func (r *UserPackRepo) GetByID(ctx context.Context, id uint) (*domain.UserPack, error) {
 	var pack domain.UserPack
-	if err := r.db.WithContext(ctx).Preload("User").Preload("PackTemplate").First(&pack, id).Error; err != nil {
+	if err := r.db.WithContext(ctx).Preload("User").Preload("PackTemplate").Preload("PackTemplate.TrainingTypes").First(&pack, id).Error; err != nil {
 		return nil, err
 	}
 	return &pack, nil
@@ -45,7 +45,7 @@ func (r *UserPackRepo) List(ctx context.Context, params pagination.Params) ([]do
 // ListByUser returns packs for a user.
 func (r *UserPackRepo) ListByUser(ctx context.Context, userID uint) ([]domain.UserPack, error) {
 	var packs []domain.UserPack
-	if err := r.db.WithContext(ctx).Preload("PackTemplate").Where("user_id = ?", userID).Order("created_at desc").Find(&packs).Error; err != nil {
+	if err := r.db.WithContext(ctx).Preload("PackTemplate").Preload("PackTemplate.TrainingTypes").Where("user_id = ?", userID).Order("created_at desc").Find(&packs).Error; err != nil {
 		return nil, err
 	}
 	return packs, nil

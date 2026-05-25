@@ -13,7 +13,9 @@ type TrainingTypeService struct {
 }
 
 // NewTrainingTypeService creates training type service.
-func NewTrainingTypeService(repos repository.Repositories) *TrainingTypeService { return &TrainingTypeService{repos: repos} }
+func NewTrainingTypeService(repos repository.Repositories) *TrainingTypeService {
+	return &TrainingTypeService{repos: repos}
+}
 
 // List returns training types.
 func (s *TrainingTypeService) List(ctx context.Context, includeInactive bool) ([]domain.TrainingType, error) {

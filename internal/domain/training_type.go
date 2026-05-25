@@ -10,4 +10,6 @@ type TrainingType struct {
 	Description string
 	Color       string
 	IsActive    bool `gorm:"default:true"`
+	ParentID    *uint
+	Parent      *TrainingType `gorm:"foreignKey:ParentID"`
 }
