@@ -19,5 +19,5 @@ type CreateSlotDTO struct {
 	StartTime      time.Time `json:"start_time" validate:"required"`
 	EndTime        time.Time `json:"end_time" validate:"required,gtfield=StartTime"`
 	Level          string    `json:"level" validate:"required"`
-	Capacity       int       `json:"capacity" validate:"required,min=1,max=50"`
+	Capacity       int       `json:"capacity" validate:"required,min=1,max=500"`
 }
