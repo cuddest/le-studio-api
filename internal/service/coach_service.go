@@ -29,12 +29,13 @@ func (s *CoachService) Get(ctx context.Context, id uint) (*domain.Coach, error) 
 // Create creates coach.
 func (s *CoachService) Create(ctx context.Context, payload dto.CreateCoachDTO) (*domain.Coach, error) {
 	coach := &domain.Coach{
-		FirstName:   payload.FirstName,
-		LastName:    payload.LastName,
-		Bio:         payload.Bio,
-		PhotoURL:    payload.PhotoURL,
-		Specialties: payload.Specialties,
-		IsActive:    true,
+		FirstName:     payload.FirstName,
+		LastName:      payload.LastName,
+		Bio:           payload.Bio,
+		PhotoURL:      payload.PhotoURL,
+		PhotoPublicID: payload.PhotoPublicID,
+		Specialties:   payload.Specialties,
+		IsActive:      true,
 	}
 	if payload.IsActive != nil {
 		coach.IsActive = *payload.IsActive
@@ -51,21 +52,12 @@ func (s *CoachService) Update(ctx context.Context, id uint, payload dto.CreateCo
 	if err != nil {
 		return nil, err
 	}
-	if payload.FirstName != "" {
-		coach.FirstName = payload.FirstName
-	}
-	if payload.LastName != "" {
-		coach.LastName = payload.LastName
-	}
-	if payload.Bio != "" {
-		coach.Bio = payload.Bio
-	}
-	if payload.PhotoURL != "" {
-		coach.PhotoURL = payload.PhotoURL
-	}
-	if payload.Specialties != "" {
-		coach.Specialties = payload.Specialties
-	}
+	coach.FirstName = payload.FirstName
+	coach.LastName = payload.LastName
+	coach.Bio = payload.Bio
+	coach.PhotoURL = payload.PhotoURL
+	coach.PhotoPublicID = payload.PhotoPublicID
+	coach.Specialties = payload.Specialties
 	if payload.IsActive != nil {
 		coach.IsActive = *payload.IsActive
 	}

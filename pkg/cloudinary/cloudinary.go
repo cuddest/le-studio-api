@@ -14,6 +14,12 @@ type Client struct {
 	cld *cloudinary.Cloudinary
 }
 
+// UploadResult contains uploaded asset details.
+type UploadResult struct {
+	URL      string
+	PublicID string
+}
+
 // New creates a cloudinary helper.
 func New(cloudName, apiKey, apiSecret string) (*Client, error) {
 	cld, err := cloudinary.NewFromParams(cloudName, apiKey, apiSecret)
@@ -24,19 +30,19 @@ func New(cloudName, apiKey, apiSecret string) (*Client, error) {
 }
 
 // UploadURL uploads from URL string and returns secure URL.
-func (c *Client) UploadURL(ctx context.Context, source string) (string, error) {
+func (c *Client) UploadURL(ctx context.Context, source string) (UploadResult, error) {
 	result, err := c.cld.Upload.Upload(ctx, source, uploader.UploadParams{})
 	if err != nil {
-		return "", fmt.Errorf("cloudinary upload failed: %w", err)
+		return UploadResult{}, fmt.Errorf("cloudinary upload failed: %w", err)
 	}
-	return result.SecureURL, nil
+	return UploadResult{URL: result.SecureURL, PublicID: result.PublicID}, nil
 }
 
-// UploadFile uploads a file and returns secure URL.
-func (c *Client) UploadFile(ctx context.Context, file *multipart.FileHeader) (string, error) {
+// UploadFile uploads a file and returns secure URL and public id.
+func (c *Client) UploadFile(ctx context.Context, file *multipart.FileHeader) (UploadResult, error) {
 	src, err := file.Open()
 	if err != nil {
-		return "", fmt.Errorf("failed to open file: %w", err)
+		return UploadResult{}, fmt.Errorf("failed to open file: %w", err)
 	}
 	defer src.Close()
 
@@ -44,7 +50,19 @@ func (c *Client) UploadFile(ctx context.Context, file *multipart.FileHeader) (st
 		Folder: "le-studio/coaches",
 	})
 	if err != nil {
-		return "", fmt.Errorf("cloudinary upload failed: %w", err)
+		return UploadResult{}, fmt.Errorf("cloudinary upload failed: %w", err)
 	}
-	return result.SecureURL, nil
+	return UploadResult{URL: result.SecureURL, PublicID: result.PublicID}, nil
+}
+
+// DeleteByPublicID deletes an uploaded asset.
+func (c *Client) DeleteByPublicID(ctx context.Context, publicID string) error {
+	if publicID == "" {
+		return nil
+	}
+	_, err := c.cld.Upload.Destroy(ctx, uploader.DestroyParams{PublicID: publicID})
+	if err != nil {
+		return fmt.Errorf("cloudinary delete failed: %w", err)
+	}
+	return nil
 }

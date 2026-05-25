@@ -2,6 +2,7 @@ package handler
 
 import (
 	"errors"
+	"mime/multipart"
 	"net/http"
 	"strconv"
 	"strings"
@@ -33,6 +34,45 @@ func (h *CoachHandler) SetCloudinaryClient(cld *cloudinary.Client) {
 	h.cld = cld
 }
 
+type coachRequest struct {
+	Payload dto.CreateCoachDTO
+	Photo   *multipart.FileHeader
+}
+
+func parseCoachRequest(c *gin.Context) (coachRequest, error) {
+	if strings.HasPrefix(c.ContentType(), "multipart/form-data") {
+		isActive := c.PostForm("is_active")
+		var activePtr *bool
+		if isActive != "" {
+			parsed := strings.EqualFold(isActive, "true") || isActive == "1" || strings.EqualFold(isActive, "on")
+			activePtr = &parsed
+		}
+
+		payload := dto.CreateCoachDTO{
+			FirstName:     c.PostForm("first_name"),
+			LastName:      c.PostForm("last_name"),
+			Bio:           c.PostForm("bio"),
+			PhotoURL:      c.PostForm("photo_url"),
+			PhotoPublicID: c.PostForm("photo_public_id"),
+			Specialties:   c.PostForm("specialties"),
+			IsActive:      activePtr,
+		}
+
+		var file *multipart.FileHeader
+		if uploaded, err := c.FormFile("photo"); err == nil {
+			file = uploaded
+		}
+
+		return coachRequest{Payload: payload, Photo: file}, nil
+	}
+
+	var payload dto.CreateCoachDTO
+	if err := c.ShouldBindJSON(&payload); err != nil {
+		return coachRequest{}, err
+	}
+	return coachRequest{Payload: payload}, nil
+}
+
 func (h *CoachHandler) List(c *gin.Context) {
 	includeInactive := strings.EqualFold(c.Query("include_inactive"), "true")
 	coaches, err := h.svc.List(c.Request.Context(), includeInactive)
@@ -62,16 +102,29 @@ func (h *CoachHandler) Get(c *gin.Context) {
 }
 
 func (h *CoachHandler) AdminCreate(c *gin.Context) {
-	var payload dto.CreateCoachDTO
-	if err := c.ShouldBindJSON(&payload); err != nil {
+	request, err := parseCoachRequest(c)
+	if err != nil {
 		response.Error(c, http.StatusBadRequest, "INVALID_PAYLOAD", "Invalid payload.", nil)
 		return
 	}
-	if err := h.v.Struct(payload); err != nil {
+	if err := h.v.Struct(request.Payload); err != nil {
 		response.Error(c, http.StatusBadRequest, "VALIDATION_FAILED", "Validation failed.", err)
 		return
 	}
-	coach, err := h.svc.Create(c.Request.Context(), payload)
+	if request.Photo != nil {
+		if h.cld == nil {
+			response.Error(c, http.StatusServiceUnavailable, "CLOUDINARY_ERROR", "Photo uploads are unavailable.", nil)
+			return
+		}
+		uploaded, err := h.cld.UploadFile(c.Request.Context(), request.Photo)
+		if err != nil {
+			response.Error(c, http.StatusInternalServerError, "UPLOAD_FAILED", "Unable to upload coach photo.", nil)
+			return
+		}
+		request.Payload.PhotoURL = uploaded.URL
+		request.Payload.PhotoPublicID = uploaded.PublicID
+	}
+	coach, err := h.svc.Create(c.Request.Context(), request.Payload)
 	if err != nil {
 		response.Error(c, http.StatusInternalServerError, "COACH_CREATE_FAILED", "Unable to create coach.", nil)
 		return
@@ -85,19 +138,42 @@ func (h *CoachHandler) AdminUpdate(c *gin.Context) {
 		response.Error(c, http.StatusBadRequest, "INVALID_ID", "Invalid id.", nil)
 		return
 	}
-	var payload dto.CreateCoachDTO
-	if err := c.ShouldBindJSON(&payload); err != nil {
+	existing, err := h.svc.Get(c.Request.Context(), uint(id))
+	if err != nil {
+		response.Error(c, http.StatusNotFound, "NOT_FOUND", "Coach not found.", nil)
+		return
+	}
+
+	request, err := parseCoachRequest(c)
+	if err != nil {
 		response.Error(c, http.StatusBadRequest, "INVALID_PAYLOAD", "Invalid payload.", nil)
 		return
 	}
-	if err := h.v.Struct(payload); err != nil {
+	if err := h.v.Struct(request.Payload); err != nil {
 		response.Error(c, http.StatusBadRequest, "VALIDATION_FAILED", "Validation failed.", err)
 		return
 	}
-	coach, err := h.svc.Update(c.Request.Context(), uint(id), payload)
+	if request.Photo != nil {
+		if h.cld == nil {
+			response.Error(c, http.StatusServiceUnavailable, "CLOUDINARY_ERROR", "Photo uploads are unavailable.", nil)
+			return
+		}
+		uploaded, err := h.cld.UploadFile(c.Request.Context(), request.Photo)
+		if err != nil {
+			response.Error(c, http.StatusInternalServerError, "UPLOAD_FAILED", "Unable to upload coach photo.", nil)
+			return
+		}
+		request.Payload.PhotoURL = uploaded.URL
+		request.Payload.PhotoPublicID = uploaded.PublicID
+	}
+
+	coach, err := h.svc.Update(c.Request.Context(), uint(id), request.Payload)
 	if err != nil {
 		response.Error(c, http.StatusInternalServerError, "COACH_UPDATE_FAILED", "Unable to update coach.", nil)
 		return
+	}
+	if request.Photo != nil && h.cld != nil && existing.PhotoPublicID != "" && existing.PhotoPublicID != coach.PhotoPublicID {
+		_ = h.cld.DeleteByPublicID(c.Request.Context(), existing.PhotoPublicID)
 	}
 	response.OK(c, coach)
 }
@@ -107,6 +183,21 @@ func (h *CoachHandler) AdminDelete(c *gin.Context) {
 	if err != nil {
 		response.Error(c, http.StatusBadRequest, "INVALID_ID", "Invalid id.", nil)
 		return
+	}
+	coach, err := h.svc.Get(c.Request.Context(), uint(id))
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			response.Error(c, http.StatusNotFound, "NOT_FOUND", "Coach not found.", nil)
+			return
+		}
+		response.Error(c, http.StatusInternalServerError, "COACH_FETCH_FAILED", "Unable to load coach.", nil)
+		return
+	}
+	if h.cld != nil && coach.PhotoPublicID != "" {
+		if err := h.cld.DeleteByPublicID(c.Request.Context(), coach.PhotoPublicID); err != nil {
+			response.Error(c, http.StatusInternalServerError, "PHOTO_DELETE_FAILED", "Unable to delete coach photo.", nil)
+			return
+		}
 	}
 	if err := h.svc.Delete(c.Request.Context(), uint(id)); err != nil {
 		response.Error(c, http.StatusInternalServerError, "COACH_DELETE_FAILED", "Unable to delete coach.", nil)
@@ -130,36 +221,53 @@ func (h *CoachHandler) AdminToggleActive(c *gin.Context) {
 }
 
 func (h *CoachHandler) AdminUploadPhoto(c *gin.Context) {
-	if h.cld == nil {
-		response.Error(c, http.StatusServiceUnavailable, "CLOUDINARY_ERROR", "File upload service unavailable.", nil)
-		return
-	}
-
 	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
 		response.Error(c, http.StatusBadRequest, "INVALID_ID", "Invalid id.", nil)
 		return
 	}
 
-	file, err := c.FormFile("photo")
+	existing, err := h.svc.Get(c.Request.Context(), uint(id))
 	if err != nil {
-		response.Error(c, http.StatusBadRequest, "INVALID_FILE", "No file provided.", nil)
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			response.Error(c, http.StatusNotFound, "NOT_FOUND", "Coach not found.", nil)
+			return
+		}
+		response.Error(c, http.StatusInternalServerError, "COACH_FETCH_FAILED", "Unable to load coach.", nil)
 		return
 	}
 
-	// Upload to Cloudinary
-	photoURL, err := h.cld.UploadFile(c.Request.Context(), file)
-	if err != nil {
-		response.Error(c, http.StatusInternalServerError, "UPLOAD_FAILED", err.Error(), nil)
+	request, err := parseCoachRequest(c)
+	if err != nil || request.Photo == nil {
+		response.Error(c, http.StatusBadRequest, "INVALID_FILE", "No photo provided.", nil)
+		return
+	}
+	if h.cld == nil {
+		response.Error(c, http.StatusServiceUnavailable, "CLOUDINARY_ERROR", "Photo uploads are unavailable.", nil)
 		return
 	}
 
-	// Update coach with photo URL
-	coach, err := h.svc.Update(c.Request.Context(), uint(id), dto.CreateCoachDTO{PhotoURL: photoURL})
+	uploaded, err := h.cld.UploadFile(c.Request.Context(), request.Photo)
+	if err != nil {
+		response.Error(c, http.StatusInternalServerError, "UPLOAD_FAILED", "Unable to upload coach photo.", nil)
+		return
+	}
+
+	request.Payload.FirstName = existing.FirstName
+	request.Payload.LastName = existing.LastName
+	request.Payload.Bio = existing.Bio
+	request.Payload.Specialties = existing.Specialties
+	request.Payload.IsActive = &existing.IsActive
+	request.Payload.PhotoURL = uploaded.URL
+	request.Payload.PhotoPublicID = uploaded.PublicID
+
+	coach, err := h.svc.Update(c.Request.Context(), uint(id), request.Payload)
 	if err != nil {
 		response.Error(c, http.StatusInternalServerError, "COACH_UPDATE_FAILED", "Unable to update coach.", nil)
 		return
 	}
-
-	response.OK(c, gin.H{"photo_url": photoURL, "coach": coach})
+	if existing.PhotoPublicID != "" && existing.PhotoPublicID != coach.PhotoPublicID {
+		_ = h.cld.DeleteByPublicID(c.Request.Context(), existing.PhotoPublicID)
+	}
+	response.OK(c, gin.H{"photo_url": coach.PhotoURL, "photo_public_id": coach.PhotoPublicID, "coach": coach})
 }
