@@ -147,6 +147,7 @@ func registerRoutes(v1 *gin.RouterGroup, jwtSecret string, authH *handler.AuthHa
 	admin.PATCH("/coaches/:id/toggle-active", coachH.AdminToggleActive)
 	admin.POST("/coaches/:id/photo", coachH.AdminUploadPhoto)
 	admin.POST("/training-types", trainingH.AdminCreate)
+	admin.GET("/training-types", trainingH.List)
 	admin.PATCH("/training-types/:id", trainingH.AdminUpdate)
 	admin.DELETE("/training-types/:id", trainingH.AdminDelete)
 	admin.POST("/pack-templates", tplH.AdminCreate)
