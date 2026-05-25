@@ -123,6 +123,8 @@ func registerRoutes(v1 *gin.RouterGroup, jwtSecret string, authH *handler.AuthHa
 	admin.GET("/auth/me", adminH.GetMe)
 	admin.PATCH("/auth/me", adminH.UpdateMe)
 	admin.GET("/stats/overview", adminH.StatsOverview)
+	// Allow admins to list coaches via the admin namespace as well
+	admin.GET("/coaches", coachH.List)
 	admin.GET("/admins", adminH.ListAdmins)
 	admin.POST("/admins", adminH.CreateAdmin)
 	admin.GET("/users", userH.AdminListUsers)
