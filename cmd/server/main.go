@@ -163,6 +163,7 @@ func registerRoutes(v1 *gin.RouterGroup, jwtSecret string, authH *handler.AuthHa
 	admin.POST("/schedules", schH.AdminCreate)
 	admin.GET("/schedules", schH.AdminList)
 	admin.GET("/schedules/:id", schH.Get)
+	admin.GET("/schedules/:id/slots", schH.ListSlots)
 	admin.PATCH("/schedules/:id", schH.AdminUpdate)
 	admin.POST("/schedules/:id/publish", schH.AdminPublish)
 	admin.DELETE("/schedules/:id", schH.AdminDelete)
