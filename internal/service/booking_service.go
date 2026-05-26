@@ -27,10 +27,19 @@ func NewBookingService(repos repository.Repositories, db *gorm.DB) *BookingServi
 
 // Create creates booking for user.
 func (s *BookingService) Create(ctx context.Context, userID uint, payload dto.CreateBookingDTO) (*domain.Booking, error) {
+	return s.createForUser(ctx, userID, payload.SlotID, payload.UserPackID)
+}
+
+// AdminCreate creates booking on behalf of a user.
+func (s *BookingService) AdminCreate(ctx context.Context, payload dto.AdminCreateBookingDTO) (*domain.Booking, error) {
+	return s.createForUser(ctx, payload.UserID, payload.SlotID, payload.UserPackID)
+}
+
+func (s *BookingService) createForUser(ctx context.Context, userID, slotID, userPackID uint) (*domain.Booking, error) {
 	var created *domain.Booking
 	if err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		var slot domain.Slot
-		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).Preload("TrainingType").Preload("TrainingType.Parent").First(&slot, payload.SlotID).Error; err != nil {
+		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).Preload("TrainingType").Preload("TrainingType.Parent").First(&slot, slotID).Error; err != nil {
 			return err
 		}
 		if slot.IsCancelled {
@@ -41,7 +50,7 @@ func (s *BookingService) Create(ctx context.Context, userID uint, payload dto.Cr
 		}
 
 		var pack domain.UserPack
-		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).Preload("PackTemplate").Preload("PackTemplate.TrainingTypes").First(&pack, payload.UserPackID).Error; err != nil {
+		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).Preload("PackTemplate").Preload("PackTemplate.TrainingTypes").First(&pack, userPackID).Error; err != nil {
 			return err
 		}
 		if pack.UserID != userID {

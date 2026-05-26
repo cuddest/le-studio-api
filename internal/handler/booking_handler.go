@@ -53,6 +53,28 @@ func (h *BookingHandler) Create(c *gin.Context) {
 	response.Created(c, booking)
 }
 
+func (h *BookingHandler) AdminCreate(c *gin.Context) {
+	var payload dto.AdminCreateBookingDTO
+	if err := c.ShouldBindJSON(&payload); err != nil {
+		response.Error(c, http.StatusBadRequest, "INVALID_PAYLOAD", "Invalid payload.", nil)
+		return
+	}
+	if err := h.v.Struct(payload); err != nil {
+		response.Error(c, http.StatusBadRequest, "VALIDATION_FAILED", "Validation failed.", err)
+		return
+	}
+	booking, err := h.svc.AdminCreate(c.Request.Context(), payload)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			response.Error(c, http.StatusNotFound, "NOT_FOUND", "Slot or pack not found.", nil)
+			return
+		}
+		response.Error(c, http.StatusBadRequest, "BOOKING_FAILED", err.Error(), nil)
+		return
+	}
+	response.Created(c, booking)
+}
+
 func (h *BookingHandler) Cancel(c *gin.Context) {
 	userID, err := parseUserID(c)
 	if err != nil {
