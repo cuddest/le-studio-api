@@ -36,7 +36,7 @@ func (r *UserPackRepo) List(ctx context.Context, params pagination.Params) ([]do
 		return nil, 0, err
 	}
 	var packs []domain.UserPack
-	if err := r.db.WithContext(ctx).Preload("User").Preload("PackTemplate").Order("created_at desc").Limit(params.Limit).Offset(params.Offset).Find(&packs).Error; err != nil {
+	if err := r.db.WithContext(ctx).Preload("User").Preload("PackTemplate").Preload("PackTemplate.TrainingTypes").Order("created_at desc").Limit(params.Limit).Offset(params.Offset).Find(&packs).Error; err != nil {
 		return nil, 0, err
 	}
 	return packs, total, nil
