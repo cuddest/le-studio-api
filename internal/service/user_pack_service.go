@@ -31,11 +31,24 @@ func (s *UserPackService) Purchase(ctx context.Context, userID uint, payload dto
 		PackTemplateID: packTemplate.ID,
 		TotalSessions:  packTemplate.NumberOfSessions,
 		UsedSessions:   0,
-		IsPaid:         true,
-		Status:         "active",
+		IsPaid:         false,
+		Status:         "pending",
+	}
+	if payload.IsPaid != nil {
+		pack.IsPaid = *payload.IsPaid
+		if pack.IsPaid {
+			pack.Status = "active"
+		}
 	}
 	if err := s.repos.UserPacks.Create(ctx, pack); err != nil {
 		return nil, err
+	}
+	if pack.IsPaid {
+		now := time.Now()
+		pack.PaidAt = &now
+		if err := s.repos.UserPacks.Update(ctx, pack); err != nil {
+			return nil, err
+		}
 	}
 	return pack, nil
 }
@@ -79,6 +92,9 @@ func (s *UserPackService) AdminMarkPaid(ctx context.Context, id uint) (*domain.U
 		now := time.Now()
 		pack.IsPaid = true
 		pack.PaidAt = &now
+		if pack.Status == "pending" {
+			pack.Status = "active"
+		}
 	}
 	if err := s.repos.UserPacks.Update(ctx, pack); err != nil {
 		return nil, err

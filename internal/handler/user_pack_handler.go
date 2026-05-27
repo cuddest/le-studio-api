@@ -53,6 +53,28 @@ func (h *UserPackHandler) Purchase(c *gin.Context) {
 	response.Created(c, pack)
 }
 
+func (h *UserPackHandler) AdminCreate(c *gin.Context) {
+	var payload dto.CreateUserPackDTO
+	if err := c.ShouldBindJSON(&payload); err != nil {
+		response.Error(c, http.StatusBadRequest, "INVALID_PAYLOAD", "Invalid payload.", nil)
+		return
+	}
+	if err := h.v.Struct(payload); err != nil {
+		response.Error(c, http.StatusBadRequest, "VALIDATION_FAILED", "Validation failed.", err)
+		return
+	}
+	pack, err := h.svc.Purchase(c.Request.Context(), payload.UserID, payload)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			response.Error(c, http.StatusNotFound, "NOT_FOUND", "Pack template not found.", nil)
+			return
+		}
+		response.Error(c, http.StatusInternalServerError, "PURCHASE_FAILED", "Unable to create user pack.", nil)
+		return
+	}
+	response.Created(c, pack)
+}
+
 func (h *UserPackHandler) ListByUser(c *gin.Context) {
 	userID, err := parseUserID(c)
 	if err != nil {

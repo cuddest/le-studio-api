@@ -6,6 +6,7 @@ import "time"
 type CreateUserPackDTO struct {
 	PackTemplateID uint `json:"pack_template_id" validate:"required"`
 	UserID         uint `json:"user_id"`
+	IsPaid         *bool `json:"is_paid"`
 }
 
 // UpdateUserPackDTO defines patch payload for admin updates.

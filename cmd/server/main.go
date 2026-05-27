@@ -154,6 +154,7 @@ func registerRoutes(v1 *gin.RouterGroup, jwtSecret string, authH *handler.AuthHa
 	admin.PATCH("/pack-templates/:id", tplH.AdminUpdate)
 	admin.DELETE("/pack-templates/:id", tplH.AdminDelete)
 	admin.PATCH("/pack-templates/:id/reorder", tplH.AdminReorder)
+	admin.POST("/user-packs", upH.AdminCreate)
 	admin.GET("/user-packs", upH.AdminList)
 	admin.GET("/user-packs/:id", upH.AdminGet)
 	admin.PATCH("/user-packs/:id", upH.AdminUpdate)
