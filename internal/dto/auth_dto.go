@@ -7,6 +7,7 @@ type RegisterDTO struct {
 	Email     string `json:"email" validate:"required,email"`
 	Password  string `json:"password" validate:"required,min=8"`
 	Phone     string `json:"phone"`
+	Gender    string `json:"gender" validate:"omitempty,oneof=male female"`
 }
 
 // RegisterAdminDTO defines admin registration payload.
@@ -33,5 +34,6 @@ type GuestPurchaseDTO struct {
 	LastName       string `json:"last_name" validate:"required,min=2,max=50"`
 	Email          string `json:"email" validate:"required,email"`
 	Phone          string `json:"phone"`
+	Gender         string `json:"gender" validate:"omitempty,oneof=male female"`
 	PackTemplateID uint   `json:"pack_template_id" validate:"required"`
 }

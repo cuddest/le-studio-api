@@ -38,12 +38,22 @@ func (s *BookingService) AdminCreate(ctx context.Context, payload dto.AdminCreat
 func (s *BookingService) createForUser(ctx context.Context, userID, slotID, userPackID uint) (*domain.Booking, error) {
 	var created *domain.Booking
 	if err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		var user domain.User
+		if err := tx.First(&user, userID).Error; err != nil {
+			return err
+		}
 		var slot domain.Slot
 		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).Preload("TrainingType").Preload("TrainingType.Parent").First(&slot, slotID).Error; err != nil {
 			return err
 		}
 		if slot.IsCancelled {
 			return errors.New("slot is cancelled")
+		}
+		if slot.SlotType == domain.SlotTypeWomenOnly && user.Gender != "female" {
+			return errors.New("this session is women only")
+		}
+		if slot.SlotType == domain.SlotTypeMenOnly && user.Gender != "male" {
+			return errors.New("this session is men only")
 		}
 		if slot.BookedCount >= slot.Capacity {
 			return errors.New("slot is full")

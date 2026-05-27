@@ -9,6 +9,7 @@ type User struct {
 	LastName     string `gorm:"not null"`
 	Email        string `gorm:"uniqueIndex;not null;index"`
 	Phone        string
+	Gender       string `gorm:"default:'';index"`
 	PasswordHash string `json:"-"`
 	PhotoURL     string
 	IsGuest      bool `gorm:"default:false;index"`

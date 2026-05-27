@@ -5,6 +5,7 @@ type UpdateMeDTO struct {
 	FirstName string `json:"first_name" validate:"omitempty,min=2,max=50"`
 	LastName  string `json:"last_name" validate:"omitempty,min=2,max=50"`
 	Phone     string `json:"phone"`
+	Gender    string `json:"gender" validate:"omitempty,oneof=male female"`
 	PhotoURL  string `json:"photo_url"`
 }
 
@@ -24,6 +25,7 @@ type AdminUpdateUserDTO struct {
 	FirstName string `json:"first_name" validate:"omitempty,min=2,max=50"`
 	LastName  string `json:"last_name" validate:"omitempty,min=2,max=50"`
 	Phone     string `json:"phone"`
+	Gender    string `json:"gender" validate:"omitempty,oneof=male female"`
 	PhotoURL  string `json:"photo_url"`
 	IsActive  *bool  `json:"is_active"`
 }

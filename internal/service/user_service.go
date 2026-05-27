@@ -42,6 +42,9 @@ func (s *UserService) UpdateMe(ctx context.Context, userID uint, payload dto.Upd
 	if payload.Phone != "" {
 		user.Phone = payload.Phone
 	}
+	if payload.Gender != "" {
+		user.Gender = payload.Gender
+	}
 	if payload.PhotoURL != "" {
 		user.PhotoURL = payload.PhotoURL
 	}
@@ -90,6 +93,7 @@ func (s *UserService) AdminCreateUser(ctx context.Context, payload dto.RegisterD
 		LastName:     payload.LastName,
 		Email:        email,
 		Phone:        payload.Phone,
+		Gender:       payload.Gender,
 		PasswordHash: string(passwordHash),
 		IsGuest:      false,
 		IsActive:     true,
@@ -155,6 +159,9 @@ func (s *UserService) AdminUpdateUser(ctx context.Context, id uint, payload dto.
 	}
 	if payload.Phone != "" {
 		user.Phone = payload.Phone
+	}
+	if payload.Gender != "" {
+		user.Gender = payload.Gender
 	}
 	if payload.PhotoURL != "" {
 		user.PhotoURL = payload.PhotoURL
