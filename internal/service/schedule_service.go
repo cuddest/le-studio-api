@@ -117,7 +117,8 @@ func (s *ScheduleService) UpdateSlot(ctx context.Context, id uint, payload dto.C
 	if err := s.repos.Slots.Update(ctx, slot); err != nil {
 		return nil, err
 	}
-	return slot, nil
+	// Re-fetch to get fresh preloaded relationships
+	return s.repos.Slots.GetByID(ctx, id)
 }
 
 // CancelSlot marks slot cancelled.
