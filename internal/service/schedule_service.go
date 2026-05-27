@@ -116,6 +116,9 @@ func (s *ScheduleService) UpdateSlot(ctx context.Context, id uint, payload dto.C
 	slot.Level = payload.Level
 	slot.Capacity = payload.Capacity
 	slot.DayOfWeek = int(payload.Date.Weekday())
+	// Clear loaded relations so GORM doesn't try to persist/override foreign keys
+	slot.TrainingType = domain.TrainingType{}
+	slot.Coach = domain.Coach{}
 	if err := s.repos.Slots.Update(ctx, slot); err != nil {
 		return nil, err
 	}
