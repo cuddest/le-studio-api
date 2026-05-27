@@ -2,6 +2,7 @@ package handler
 
 import (
 	"errors"
+	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -184,11 +185,14 @@ func (h *ScheduleHandler) AdminUpdateSlot(c *gin.Context) {
 		response.Error(c, http.StatusBadRequest, "VALIDATION_FAILED", "Validation failed.", err)
 		return
 	}
+	// Log received payload to help debug slot updates
+	log.Printf("AdminUpdateSlot: received payload for slot %s: training_type_id=%d, coach_id=%d, name=%s", c.Param("id"), payload.TrainingTypeID, payload.CoachID, payload.Name)
 	slot, err := h.svc.UpdateSlot(c.Request.Context(), uint(id), payload)
 	if err != nil {
 		response.Error(c, http.StatusInternalServerError, "SLOT_UPDATE_FAILED", "Unable to update slot.", nil)
 		return
 	}
+	log.Printf("AdminUpdateSlot: update result for slot %d: training_type_id=%d", slot.ID, slot.TrainingTypeID)
 	response.OK(c, slot)
 }
 

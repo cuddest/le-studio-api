@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"log"
 	"time"
 
 	"le-studio-api/internal/domain"
@@ -104,6 +105,7 @@ func (s *ScheduleService) UpdateSlot(ctx context.Context, id uint, payload dto.C
 	if err != nil {
 		return nil, err
 	}
+	log.Printf("UpdateSlot: before update id=%d training_type_id=%d", id, slot.TrainingTypeID)
 	slot.TrainingTypeID = payload.TrainingTypeID
 	slot.CoachID = payload.CoachID
 	slot.SlotType = payload.SlotType
@@ -118,7 +120,12 @@ func (s *ScheduleService) UpdateSlot(ctx context.Context, id uint, payload dto.C
 		return nil, err
 	}
 	// Re-fetch to get fresh preloaded relationships
-	return s.repos.Slots.GetByID(ctx, id)
+	updated, err := s.repos.Slots.GetByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	log.Printf("UpdateSlot: after update id=%d training_type_id=%d", id, updated.TrainingTypeID)
+	return updated, nil
 }
 
 // CancelSlot marks slot cancelled.
