@@ -174,6 +174,7 @@ func registerRoutes(v1 *gin.RouterGroup, jwtSecret string, authH *handler.AuthHa
 	admin.POST("/bookings", bookingH.AdminCreate)
 	admin.GET("/bookings", bookingH.AdminList)
 	admin.PATCH("/bookings/:id/cancel", bookingH.AdminCancel)
+	admin.PATCH("/bookings/:id/mark-attended", bookingH.AdminMarkAttended)
 	admin.POST("/attendance", attendanceH.Mark)
 	admin.GET("/attendance", attendanceH.List)
 	admin.PATCH("/attendance/:id", attendanceH.Update)

@@ -136,6 +136,42 @@ func (s *BookingService) AdminCancel(ctx context.Context, bookingID uint) (*doma
 	return s.cancelInternal(ctx, bookingID, nil)
 }
 
+// AdminMarkAttended marks a booking attended and records attendance.
+func (s *BookingService) AdminMarkAttended(ctx context.Context, adminID, bookingID uint) (*domain.Booking, error) {
+	var updated *domain.Booking
+	if err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		var booking domain.Booking
+		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).First(&booking, bookingID).Error; err != nil {
+			return err
+		}
+		if booking.Status == "cancelled" {
+			return errors.New("booking is cancelled")
+		}
+		if booking.Status == "completed" {
+			return errors.New("booking is already attended")
+		}
+
+		attendance := &domain.Attendance{
+			BookingID:  booking.ID,
+			MarkedByID: adminID,
+		}
+		if err := tx.Create(attendance).Error; err != nil {
+			return err
+		}
+
+		booking.Status = "completed"
+		if err := tx.Save(&booking).Error; err != nil {
+			return err
+		}
+
+		updated = &booking
+		return nil
+	}); err != nil {
+		return nil, err
+	}
+	return s.repos.Bookings.GetByID(ctx, updated.ID)
+}
+
 func (s *BookingService) cancelInternal(ctx context.Context, bookingID uint, userID *uint) (*domain.Booking, error) {
 	var updated *domain.Booking
 	if err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
@@ -145,6 +181,9 @@ func (s *BookingService) cancelInternal(ctx context.Context, bookingID uint, use
 		}
 		if userID != nil && booking.UserID != *userID {
 			return errors.New("booking does not belong to user")
+		}
+		if booking.Status == "completed" {
+			return errors.New("booking is already attended")
 		}
 		if booking.Status == "cancelled" {
 			updated = &booking

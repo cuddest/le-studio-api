@@ -108,6 +108,25 @@ func (h *BookingHandler) AdminCancel(c *gin.Context) {
 	response.OK(c, booking)
 }
 
+func (h *BookingHandler) AdminMarkAttended(c *gin.Context) {
+	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
+	if err != nil {
+		response.Error(c, http.StatusBadRequest, "INVALID_ID", "Invalid id.", nil)
+		return
+	}
+	adminID, err := parseUserID(c)
+	if err != nil {
+		response.Error(c, http.StatusUnauthorized, "UNAUTHORIZED", "Invalid token.", nil)
+		return
+	}
+	booking, err := h.svc.AdminMarkAttended(c.Request.Context(), adminID, uint(id))
+	if err != nil {
+		response.Error(c, http.StatusBadRequest, "BOOKING_ATTENDANCE_FAILED", err.Error(), nil)
+		return
+	}
+	response.OK(c, booking)
+}
+
 func (h *BookingHandler) Get(c *gin.Context) {
 	userID, err := parseUserID(c)
 	if err != nil {
