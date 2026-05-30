@@ -144,6 +144,11 @@ func (s *ScheduleService) CancelSlot(ctx context.Context, id uint) (*domain.Slot
 	return slot, nil
 }
 
+// DeleteSlot permanently removes a slot from the database.
+func (s *ScheduleService) DeleteSlot(ctx context.Context, id uint) error {
+	return s.repos.Slots.Delete(ctx, id)
+}
+
 // ListSlots returns slots for schedule.
 func (s *ScheduleService) ListSlots(ctx context.Context, scheduleID uint, includeCancelled bool) ([]domain.Slot, error) {
 	return s.repos.Slots.ListBySchedule(ctx, scheduleID, includeCancelled)

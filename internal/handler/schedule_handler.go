@@ -196,6 +196,19 @@ func (h *ScheduleHandler) AdminUpdateSlot(c *gin.Context) {
 	response.OK(c, slot)
 }
 
+func (h *ScheduleHandler) AdminDeleteSlot(c *gin.Context) {
+	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
+	if err != nil {
+		response.Error(c, http.StatusBadRequest, "INVALID_ID", "Invalid id.", nil)
+		return
+	}
+	if err := h.svc.DeleteSlot(c.Request.Context(), uint(id)); err != nil {
+		response.Error(c, http.StatusInternalServerError, "SLOT_DELETE_FAILED", "Unable to delete slot.", nil)
+		return
+	}
+	response.OK(c, gin.H{"message": "deleted"})
+}
+
 func (h *ScheduleHandler) AdminCancelSlot(c *gin.Context) {
 	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {

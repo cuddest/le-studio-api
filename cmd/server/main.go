@@ -170,7 +170,7 @@ func registerRoutes(v1 *gin.RouterGroup, jwtSecret string, authH *handler.AuthHa
 	admin.DELETE("/schedules/:id", schH.AdminDelete)
 	admin.POST("/schedules/:id/slots", schH.AdminCreateSlot)
 	admin.PATCH("/slots/:id", schH.AdminUpdateSlot)
-	admin.DELETE("/slots/:id", schH.AdminCancelSlot)
+	admin.DELETE("/slots/:id", schH.AdminDeleteSlot)
 	admin.POST("/bookings", bookingH.AdminCreate)
 	admin.GET("/bookings", bookingH.AdminList)
 	admin.PATCH("/bookings/:id/cancel", bookingH.AdminCancel)
