@@ -64,6 +64,10 @@ func (h *TrainingTypeHandler) AdminCreate(c *gin.Context) {
 	}
 	created, err := h.svc.Create(c.Request.Context(), training)
 	if err != nil {
+		if errors.Is(err, service.ErrTrainingTypeInvalidParent) {
+			response.Error(c, http.StatusBadRequest, "INVALID_PARENT", "Parent must be a top-level training type (one without its own parent).", nil)
+			return
+		}
 		response.Error(c, http.StatusInternalServerError, "TRAINING_CREATE_FAILED", "Unable to create training type.", nil)
 		return
 	}
@@ -105,6 +109,10 @@ func (h *TrainingTypeHandler) AdminUpdate(c *gin.Context) {
 	}
 	updated, err := h.svc.Update(c.Request.Context(), training)
 	if err != nil {
+		if errors.Is(err, service.ErrTrainingTypeInvalidParent) {
+			response.Error(c, http.StatusBadRequest, "INVALID_PARENT", "Parent must be a top-level training type (one without its own parent).", nil)
+			return
+		}
 		response.Error(c, http.StatusInternalServerError, "TRAINING_UPDATE_FAILED", "Unable to update training type.", nil)
 		return
 	}
