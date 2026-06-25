@@ -86,7 +86,7 @@ func (h *ScheduleHandler) AdminCreate(c *gin.Context) {
 		return
 	}
 	if err := h.v.Struct(payload); err != nil {
-		response.Error(c, http.StatusBadRequest, "VALIDATION_FAILED", "Validation failed.", err)
+		response.Error(c, http.StatusBadRequest, "VALIDATION_FAILED", "Validation failed.", formatValidationErrors(err))
 		return
 	}
 	schedule, err := h.svc.AdminCreate(c.Request.Context(), payload)
@@ -123,7 +123,7 @@ func (h *ScheduleHandler) AdminUpdate(c *gin.Context) {
 		return
 	}
 	if err := h.v.Struct(payload); err != nil {
-		response.Error(c, http.StatusBadRequest, "VALIDATION_FAILED", "Validation failed.", err)
+		response.Error(c, http.StatusBadRequest, "VALIDATION_FAILED", "Validation failed.", formatValidationErrors(err))
 		return
 	}
 	schedule, err := h.svc.AdminUpdate(c.Request.Context(), uint(id), payload)
@@ -159,7 +159,7 @@ func (h *ScheduleHandler) AdminCreateSlot(c *gin.Context) {
 		return
 	}
 	if err := h.v.Struct(payload); err != nil {
-		response.Error(c, http.StatusBadRequest, "VALIDATION_FAILED", "Validation failed.", err)
+		response.Error(c, http.StatusBadRequest, "VALIDATION_FAILED", "Validation failed.", formatValidationErrors(err))
 		return
 	}
 	slot, err := h.svc.CreateSlot(c.Request.Context(), uint(id), payload)
@@ -182,7 +182,7 @@ func (h *ScheduleHandler) AdminUpdateSlot(c *gin.Context) {
 		return
 	}
 	if err := h.v.Struct(payload); err != nil {
-		response.Error(c, http.StatusBadRequest, "VALIDATION_FAILED", "Validation failed.", err)
+		response.Error(c, http.StatusBadRequest, "VALIDATION_FAILED", "Validation failed.", formatValidationErrors(err))
 		return
 	}
 	// Log received payload to help debug slot updates

@@ -38,7 +38,7 @@ func (h *BookingHandler) Create(c *gin.Context) {
 		return
 	}
 	if err := h.v.Struct(payload); err != nil {
-		response.Error(c, http.StatusBadRequest, "VALIDATION_FAILED", "Validation failed.", err)
+		response.Error(c, http.StatusBadRequest, "VALIDATION_FAILED", "Validation failed.", formatValidationErrors(err))
 		return
 	}
 	booking, err := h.svc.Create(c.Request.Context(), userID, payload)
@@ -60,7 +60,7 @@ func (h *BookingHandler) AdminCreate(c *gin.Context) {
 		return
 	}
 	if err := h.v.Struct(payload); err != nil {
-		response.Error(c, http.StatusBadRequest, "VALIDATION_FAILED", "Validation failed.", err)
+		response.Error(c, http.StatusBadRequest, "VALIDATION_FAILED", "Validation failed.", formatValidationErrors(err))
 		return
 	}
 	booking, err := h.svc.AdminCreate(c.Request.Context(), payload)

@@ -61,7 +61,7 @@ func (h *PackTemplateHandler) AdminCreate(c *gin.Context) {
 		return
 	}
 	if err := h.v.Struct(payload); err != nil {
-		response.Error(c, http.StatusBadRequest, "VALIDATION_FAILED", "Validation failed.", err)
+		response.Error(c, http.StatusBadRequest, "VALIDATION_FAILED", "Validation failed.", formatValidationErrors(err))
 		return
 	}
 	tpl, err := h.svc.Create(c.Request.Context(), payload)
@@ -84,7 +84,7 @@ func (h *PackTemplateHandler) AdminUpdate(c *gin.Context) {
 		return
 	}
 	if err := h.v.Struct(payload); err != nil {
-		response.Error(c, http.StatusBadRequest, "VALIDATION_FAILED", "Validation failed.", err)
+		response.Error(c, http.StatusBadRequest, "VALIDATION_FAILED", "Validation failed.", formatValidationErrors(err))
 		return
 	}
 	tpl, err := h.svc.Update(c.Request.Context(), uint(id), payload)
@@ -120,7 +120,7 @@ func (h *PackTemplateHandler) AdminReorder(c *gin.Context) {
 		return
 	}
 	if err := h.v.Struct(payload); err != nil {
-		response.Error(c, http.StatusBadRequest, "VALIDATION_FAILED", "Validation failed.", err)
+		response.Error(c, http.StatusBadRequest, "VALIDATION_FAILED", "Validation failed.", formatValidationErrors(err))
 		return
 	}
 	tpl, err := h.svc.Reorder(c.Request.Context(), uint(id), payload)

@@ -46,7 +46,7 @@ func (h *TrainingTypeHandler) AdminCreate(c *gin.Context) {
 		return
 	}
 	if err := h.v.Struct(payload); err != nil {
-		response.Error(c, http.StatusBadRequest, "VALIDATION_FAILED", "Validation failed.", err)
+		response.Error(c, http.StatusBadRequest, "VALIDATION_FAILED", "Validation failed.", formatValidationErrors(err))
 		return
 	}
 	training := &domain.TrainingType{
@@ -83,7 +83,7 @@ func (h *TrainingTypeHandler) AdminUpdate(c *gin.Context) {
 		return
 	}
 	if err := h.v.Struct(payload); err != nil {
-		response.Error(c, http.StatusBadRequest, "VALIDATION_FAILED", "Validation failed.", err)
+		response.Error(c, http.StatusBadRequest, "VALIDATION_FAILED", "Validation failed.", formatValidationErrors(err))
 		return
 	}
 	training, err := h.svc.Get(c.Request.Context(), uint(id))

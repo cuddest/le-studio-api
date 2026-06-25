@@ -33,7 +33,7 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		return
 	}
 	if err := h.v.Struct(payload); err != nil {
-		response.Error(c, http.StatusBadRequest, "VALIDATION_FAILED", "Validation failed.", err)
+		response.Error(c, http.StatusBadRequest, "VALIDATION_FAILED", "Validation failed.", formatValidationErrors(err))
 		return
 	}
 	access, refresh, user, err := h.svc.Register(c.Request.Context(), payload, c.Request.UserAgent(), c.ClientIP())
@@ -56,7 +56,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		return
 	}
 	if err := h.v.Struct(payload); err != nil {
-		response.Error(c, http.StatusBadRequest, "VALIDATION_FAILED", "Validation failed.", err)
+		response.Error(c, http.StatusBadRequest, "VALIDATION_FAILED", "Validation failed.", formatValidationErrors(err))
 		return
 	}
 	access, refresh, user, err := h.svc.Login(c.Request.Context(), payload, c.Request.UserAgent(), c.ClientIP())
@@ -75,7 +75,7 @@ func (h *AuthHandler) Refresh(c *gin.Context) {
 		return
 	}
 	if err := h.v.Struct(payload); err != nil {
-		response.Error(c, http.StatusBadRequest, "VALIDATION_FAILED", "Validation failed.", err)
+		response.Error(c, http.StatusBadRequest, "VALIDATION_FAILED", "Validation failed.", formatValidationErrors(err))
 		return
 	}
 	access, refresh, _, _, err := h.svc.Refresh(c.Request.Context(), payload.RefreshToken, c.Request.UserAgent(), c.ClientIP())
@@ -94,7 +94,7 @@ func (h *AuthHandler) Logout(c *gin.Context) {
 		return
 	}
 	if err := h.v.Struct(payload); err != nil {
-		response.Error(c, http.StatusBadRequest, "VALIDATION_FAILED", "Validation failed.", err)
+		response.Error(c, http.StatusBadRequest, "VALIDATION_FAILED", "Validation failed.", formatValidationErrors(err))
 		return
 	}
 	if err := h.svc.Logout(c.Request.Context(), payload.RefreshToken); err != nil {
@@ -112,7 +112,7 @@ func (h *AuthHandler) Guest(c *gin.Context) {
 		return
 	}
 	if err := h.v.Struct(payload); err != nil {
-		response.Error(c, http.StatusBadRequest, "VALIDATION_FAILED", "Validation failed.", err)
+		response.Error(c, http.StatusBadRequest, "VALIDATION_FAILED", "Validation failed.", formatValidationErrors(err))
 		return
 	}
 	access, refresh, user, pack, err := h.svc.GuestPurchase(c.Request.Context(), payload, c.Request.UserAgent(), c.ClientIP())
@@ -135,7 +135,7 @@ func (h *AuthHandler) AdminLogin(c *gin.Context) {
 		return
 	}
 	if err := h.v.Struct(payload); err != nil {
-		response.Error(c, http.StatusBadRequest, "VALIDATION_FAILED", "Validation failed.", err)
+		response.Error(c, http.StatusBadRequest, "VALIDATION_FAILED", "Validation failed.", formatValidationErrors(err))
 		return
 	}
 	access, refresh, admin, err := h.svc.AdminLogin(c.Request.Context(), payload, c.Request.UserAgent(), c.ClientIP())
@@ -164,7 +164,7 @@ func (h *AuthHandler) AdminRegister(c *gin.Context) {
 		return
 	}
 	if err := h.v.Struct(payload); err != nil {
-		response.Error(c, http.StatusBadRequest, "VALIDATION_FAILED", "Validation failed.", err)
+		response.Error(c, http.StatusBadRequest, "VALIDATION_FAILED", "Validation failed.", formatValidationErrors(err))
 		return
 	}
 

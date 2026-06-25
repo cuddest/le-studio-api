@@ -38,7 +38,7 @@ func (h *AttendanceHandler) Mark(c *gin.Context) {
 		return
 	}
 	if err := h.v.Struct(payload); err != nil {
-		response.Error(c, http.StatusBadRequest, "VALIDATION_FAILED", "Validation failed.", err)
+		response.Error(c, http.StatusBadRequest, "VALIDATION_FAILED", "Validation failed.", formatValidationErrors(err))
 		return
 	}
 	attendance, err := h.svc.Mark(c.Request.Context(), adminID, payload)

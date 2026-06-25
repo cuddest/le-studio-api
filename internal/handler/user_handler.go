@@ -52,7 +52,7 @@ func (h *UserHandler) PatchMe(c *gin.Context) {
 		return
 	}
 	if err := h.v.Struct(payload); err != nil {
-		response.Error(c, http.StatusBadRequest, "VALIDATION_FAILED", "Validation failed.", err)
+		response.Error(c, http.StatusBadRequest, "VALIDATION_FAILED", "Validation failed.", formatValidationErrors(err))
 		return
 	}
 	user, err := h.svc.UpdateMe(c.Request.Context(), userID, payload)
@@ -75,7 +75,7 @@ func (h *UserHandler) ChangePassword(c *gin.Context) {
 		return
 	}
 	if err := h.v.Struct(payload); err != nil {
-		response.Error(c, http.StatusBadRequest, "VALIDATION_FAILED", "Validation failed.", err)
+		response.Error(c, http.StatusBadRequest, "VALIDATION_FAILED", "Validation failed.", formatValidationErrors(err))
 		return
 	}
 	if err := h.svc.ChangePassword(c.Request.Context(), userID, payload); err != nil {
@@ -103,7 +103,7 @@ func (h *UserHandler) AdminCreateUser(c *gin.Context) {
 		return
 	}
 	if err := h.v.Struct(payload); err != nil {
-		response.Error(c, http.StatusBadRequest, "VALIDATION_FAILED", "Validation failed.", err)
+		response.Error(c, http.StatusBadRequest, "VALIDATION_FAILED", "Validation failed.", formatValidationErrors(err))
 		return
 	}
 	user, err := h.svc.AdminCreateUser(c.Request.Context(), payload)
@@ -157,7 +157,7 @@ func (h *UserHandler) AdminPromoteGuest(c *gin.Context) {
 		return
 	}
 	if err := h.v.Struct(payload); err != nil {
-		response.Error(c, http.StatusBadRequest, "VALIDATION_FAILED", "Validation failed.", err)
+		response.Error(c, http.StatusBadRequest, "VALIDATION_FAILED", "Validation failed.", formatValidationErrors(err))
 		return
 	}
 	user, err := h.svc.AdminPromoteGuest(c.Request.Context(), uint(id), payload)
@@ -198,7 +198,7 @@ func (h *UserHandler) AdminUpdateUser(c *gin.Context) {
 		return
 	}
 	if err := h.v.Struct(payload); err != nil {
-		response.Error(c, http.StatusBadRequest, "VALIDATION_FAILED", "Validation failed.", err)
+		response.Error(c, http.StatusBadRequest, "VALIDATION_FAILED", "Validation failed.", formatValidationErrors(err))
 		return
 	}
 	user, err := h.svc.AdminUpdateUser(c.Request.Context(), uint(id), payload)

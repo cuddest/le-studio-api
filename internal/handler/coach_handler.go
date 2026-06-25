@@ -108,7 +108,7 @@ func (h *CoachHandler) AdminCreate(c *gin.Context) {
 		return
 	}
 	if err := h.v.Struct(request.Payload); err != nil {
-		response.Error(c, http.StatusBadRequest, "VALIDATION_FAILED", "Validation failed.", err)
+		response.Error(c, http.StatusBadRequest, "VALIDATION_FAILED", "Validation failed.", formatValidationErrors(err))
 		return
 	}
 	if request.Photo != nil {
@@ -150,7 +150,7 @@ func (h *CoachHandler) AdminUpdate(c *gin.Context) {
 		return
 	}
 	if err := h.v.Struct(request.Payload); err != nil {
-		response.Error(c, http.StatusBadRequest, "VALIDATION_FAILED", "Validation failed.", err)
+		response.Error(c, http.StatusBadRequest, "VALIDATION_FAILED", "Validation failed.", formatValidationErrors(err))
 		return
 	}
 	if request.Photo != nil {

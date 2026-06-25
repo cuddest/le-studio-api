@@ -38,7 +38,7 @@ func (h *UserPackHandler) Purchase(c *gin.Context) {
 		return
 	}
 	if err := h.v.Struct(payload); err != nil {
-		response.Error(c, http.StatusBadRequest, "VALIDATION_FAILED", "Validation failed.", err)
+		response.Error(c, http.StatusBadRequest, "VALIDATION_FAILED", "Validation failed.", formatValidationErrors(err))
 		return
 	}
 	pack, err := h.svc.Purchase(c.Request.Context(), userID, payload)
@@ -60,7 +60,7 @@ func (h *UserPackHandler) AdminCreate(c *gin.Context) {
 		return
 	}
 	if err := h.v.Struct(payload); err != nil {
-		response.Error(c, http.StatusBadRequest, "VALIDATION_FAILED", "Validation failed.", err)
+		response.Error(c, http.StatusBadRequest, "VALIDATION_FAILED", "Validation failed.", formatValidationErrors(err))
 		return
 	}
 	pack, err := h.svc.Purchase(c.Request.Context(), payload.UserID, payload)
@@ -163,7 +163,7 @@ func (h *UserPackHandler) AdminAdjust(c *gin.Context) {
 		return
 	}
 	if err := h.v.Struct(payload); err != nil {
-		response.Error(c, http.StatusBadRequest, "VALIDATION_FAILED", "Validation failed.", err)
+		response.Error(c, http.StatusBadRequest, "VALIDATION_FAILED", "Validation failed.", formatValidationErrors(err))
 		return
 	}
 	pack, err := h.svc.AdminAdjust(c.Request.Context(), uint(id), payload)
