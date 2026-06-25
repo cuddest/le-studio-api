@@ -33,6 +33,7 @@ type CoachRepository interface {
 	List(ctx context.Context, includeInactive, includeDeleted bool) ([]domain.Coach, error)
 	Update(ctx context.Context, coach *domain.Coach) error
 	Delete(ctx context.Context, id uint) error
+	Restore(ctx context.Context, id uint) error
 }
 
 // TrainingTypeRepository defines training type access.

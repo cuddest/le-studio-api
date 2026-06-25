@@ -207,6 +207,24 @@ func (h *CoachHandler) AdminDelete(c *gin.Context) {
 	response.OK(c, gin.H{"message": "deleted"})
 }
 
+func (h *CoachHandler) AdminRestore(c *gin.Context) {
+	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
+	if err != nil {
+		response.Error(c, http.StatusBadRequest, "INVALID_ID", "Invalid id.", nil)
+		return
+	}
+	if err := h.svc.Restore(c.Request.Context(), uint(id)); err != nil {
+		response.Error(c, http.StatusInternalServerError, "COACH_RESTORE_FAILED", "Unable to restore coach.", nil)
+		return
+	}
+	coach, err := h.svc.Get(c.Request.Context(), uint(id))
+	if err != nil {
+		response.Error(c, http.StatusInternalServerError, "COACH_FETCH_FAILED", "Unable to load coach.", nil)
+		return
+	}
+	response.OK(c, coach)
+}
+
 func (h *CoachHandler) AdminToggleActive(c *gin.Context) {
 	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {

@@ -11,7 +11,7 @@ import (
 // CoachRepo is coach repository.
 type CoachRepo struct{ db *gorm.DB }
 
-// NewCoachRepo creates coach repository.
+// NewCoachRepo creates CoachRepo.
 func NewCoachRepo(db *gorm.DB) *CoachRepo { return &CoachRepo{db: db} }
 
 // Create inserts coach.
@@ -49,7 +49,15 @@ func (r *CoachRepo) Update(ctx context.Context, coach *domain.Coach) error {
 	return r.db.WithContext(ctx).Save(coach).Error
 }
 
-// Delete removes coach by id.
+// Delete removes coach.
 func (r *CoachRepo) Delete(ctx context.Context, id uint) error {
 	return r.db.WithContext(ctx).Delete(&domain.Coach{}, id).Error
+}
+
+// Restore clears the soft-delete flag and re-activates the coach. Uses
+// Unscoped so that already-soft-deleted rows can be revived.
+func (r *CoachRepo) Restore(ctx context.Context, id uint) error {
+	return r.db.WithContext(ctx).Unscoped().Model(&domain.Coach{}).
+		Where("id = ?", id).
+		Updates(map[string]any{"deleted_at": nil, "is_active": true}).Error
 }

@@ -72,6 +72,11 @@ func (s *CoachService) Delete(ctx context.Context, id uint) error {
 	return s.repos.Coaches.Delete(ctx, id)
 }
 
+// Restore re-activates a soft-deleted coach.
+func (s *CoachService) Restore(ctx context.Context, id uint) error {
+	return s.repos.Coaches.Restore(ctx, id)
+}
+
 // ToggleActive flips coach active status.
 func (s *CoachService) ToggleActive(ctx context.Context, id uint) (*domain.Coach, error) {
 	coach, err := s.repos.Coaches.GetByID(ctx, id)
