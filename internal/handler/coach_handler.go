@@ -75,7 +75,8 @@ func parseCoachRequest(c *gin.Context) (coachRequest, error) {
 
 func (h *CoachHandler) List(c *gin.Context) {
 	includeInactive := strings.EqualFold(c.Query("include_inactive"), "true")
-	coaches, err := h.svc.List(c.Request.Context(), includeInactive)
+	includeDeleted := strings.EqualFold(c.Query("include_deleted"), "true")
+	coaches, err := h.svc.List(c.Request.Context(), includeInactive, includeDeleted)
 	if err != nil {
 		response.Error(c, http.StatusInternalServerError, "COACH_LIST_FAILED", "Unable to load coaches.", nil)
 		return

@@ -17,8 +17,8 @@ type CoachService struct {
 func NewCoachService(repos repository.Repositories) *CoachService { return &CoachService{repos: repos} }
 
 // List returns coaches.
-func (s *CoachService) List(ctx context.Context, includeInactive bool) ([]domain.Coach, error) {
-	return s.repos.Coaches.List(ctx, includeInactive)
+func (s *CoachService) List(ctx context.Context, includeInactive, includeDeleted bool) ([]domain.Coach, error) {
+	return s.repos.Coaches.List(ctx, includeInactive, includeDeleted)
 }
 
 // Get returns coach by id.

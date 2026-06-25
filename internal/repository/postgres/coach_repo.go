@@ -28,9 +28,12 @@ func (r *CoachRepo) GetByID(ctx context.Context, id uint) (*domain.Coach, error)
 	return &coach, nil
 }
 
-// List returns coaches, optionally including inactive.
-func (r *CoachRepo) List(ctx context.Context, includeInactive bool) ([]domain.Coach, error) {
+// List returns coaches, optionally including inactive and/or soft-deleted rows.
+func (r *CoachRepo) List(ctx context.Context, includeInactive, includeDeleted bool) ([]domain.Coach, error) {
 	query := r.db.WithContext(ctx).Order("last_name asc")
+	if includeDeleted {
+		query = query.Unscoped()
+	}
 	if !includeInactive {
 		query = query.Where("is_active = ?", true)
 	}
