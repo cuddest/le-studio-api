@@ -30,6 +30,7 @@ type UserRepository interface {
 type CoachRepository interface {
 	Create(ctx context.Context, coach *domain.Coach) error
 	GetByID(ctx context.Context, id uint) (*domain.Coach, error)
+	GetByIDUnscoped(ctx context.Context, id uint) (*domain.Coach, error)
 	List(ctx context.Context, includeInactive, includeDeleted bool) ([]domain.Coach, error)
 	Update(ctx context.Context, coach *domain.Coach) error
 	Delete(ctx context.Context, id uint) error

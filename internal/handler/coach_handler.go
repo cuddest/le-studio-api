@@ -185,7 +185,7 @@ func (h *CoachHandler) AdminDelete(c *gin.Context) {
 		response.Error(c, http.StatusBadRequest, "INVALID_ID", "Invalid id.", nil)
 		return
 	}
-	coach, err := h.svc.Get(c.Request.Context(), uint(id))
+	coach, err := h.svc.GetIncludingDeleted(c.Request.Context(), uint(id))
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			response.Error(c, http.StatusNotFound, "NOT_FOUND", "Coach not found.", nil)

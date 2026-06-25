@@ -28,6 +28,15 @@ func (r *CoachRepo) GetByID(ctx context.Context, id uint) (*domain.Coach, error)
 	return &coach, nil
 }
 
+// GetByIDUnscoped returns coach by id, including soft-deleted rows.
+func (r *CoachRepo) GetByIDUnscoped(ctx context.Context, id uint) (*domain.Coach, error) {
+	var coach domain.Coach
+	if err := r.db.WithContext(ctx).Unscoped().First(&coach, id).Error; err != nil {
+		return nil, err
+	}
+	return &coach, nil
+}
+
 // List returns coaches, optionally including inactive and/or soft-deleted rows.
 func (r *CoachRepo) List(ctx context.Context, includeInactive, includeDeleted bool) ([]domain.Coach, error) {
 	query := r.db.WithContext(ctx).Order("last_name asc")
@@ -49,9 +58,9 @@ func (r *CoachRepo) Update(ctx context.Context, coach *domain.Coach) error {
 	return r.db.WithContext(ctx).Save(coach).Error
 }
 
-// Delete removes coach.
+// Delete permanently removes a coach row (hard delete, bypasses soft delete).
 func (r *CoachRepo) Delete(ctx context.Context, id uint) error {
-	return r.db.WithContext(ctx).Delete(&domain.Coach{}, id).Error
+	return r.db.WithContext(ctx).Unscoped().Delete(&domain.Coach{}, id).Error
 }
 
 // Restore clears the soft-delete flag and re-activates the coach. Uses

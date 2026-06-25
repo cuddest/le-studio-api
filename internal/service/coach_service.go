@@ -26,6 +26,11 @@ func (s *CoachService) Get(ctx context.Context, id uint) (*domain.Coach, error) 
 	return s.repos.Coaches.GetByID(ctx, id)
 }
 
+// GetIncludingDeleted returns coach by id, including soft-deleted rows.
+func (s *CoachService) GetIncludingDeleted(ctx context.Context, id uint) (*domain.Coach, error) {
+	return s.repos.Coaches.GetByIDUnscoped(ctx, id)
+}
+
 // Create creates coach.
 func (s *CoachService) Create(ctx context.Context, payload dto.CreateCoachDTO) (*domain.Coach, error) {
 	coach := &domain.Coach{
