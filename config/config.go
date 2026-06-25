@@ -1,12 +1,16 @@
 package config
 
 import (
+	"fmt"
 	"os"
 	"strings"
 	"time"
 
 	"github.com/joho/godotenv"
 )
+
+// minJWTSecretLen enforces a minimum length on JWT signing secrets.
+const minJWTSecretLen = 32
 
 // Config stores runtime application configuration values.
 type Config struct {
@@ -33,7 +37,7 @@ func Load() (Config, error) {
 	_ = godotenv.Load()
 	access, _ := time.ParseDuration(get("ACCESS_TOKEN_DURATION", "15m"))
 	refresh, _ := time.ParseDuration(get("REFRESH_TOKEN_DURATION", "168h"))
-	return Config{
+	cfg := Config{
 		Port:                 get("PORT", "8080"),
 		Environment:          get("ENV", "development"),
 		DBHost:               get("DB_HOST", "localhost"),
@@ -42,7 +46,7 @@ func Load() (Config, error) {
 		DBPassword:           get("DB_PASSWORD", "postgres"),
 		DBName:               get("DB_NAME", "lestudio"),
 		DBSSLMode:            get("DB_SSLMODE", "disable"),
-		JWTSecret:            get("JWT_SECRET", "change-me"),
+		JWTSecret:            os.Getenv("JWT_SECRET"),
 		AccessTokenDuration:  access,
 		RefreshTokenDuration: refresh,
 		CloudinaryCloudName:  get("CLOUDINARY_CLOUD_NAME", ""),
@@ -50,7 +54,21 @@ func Load() (Config, error) {
 		CloudinaryAPISecret:  get("CLOUDINARY_API_SECRET", ""),
 		AdminSetupKey:        get("ADMIN_SETUP_KEY", ""),
 		AllowedOrigins:       strings.Split(get("ALLOWED_ORIGINS", "*"), ","),
-	}, nil
+	}
+	if err := cfg.validate(); err != nil {
+		return Config{}, err
+	}
+	return cfg, nil
+}
+
+func (c Config) validate() error {
+	if c.JWTSecret == "" {
+		return fmt.Errorf("JWT_SECRET environment variable is required")
+	}
+	if len(c.JWTSecret) < minJWTSecretLen {
+		return fmt.Errorf("JWT_SECRET must be at least %d characters", minJWTSecretLen)
+	}
+	return nil
 }
 
 func get(k, d string) string {
