@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"log"
 	"time"
 
@@ -9,6 +10,10 @@ import (
 	"le-studio-api/internal/dto"
 	"le-studio-api/internal/repository"
 )
+
+// ErrSlotConflict is returned when a slot's time range overlaps an existing
+// non-cancelled slot in the same schedule.
+var ErrSlotConflict = errors.New("slot time conflicts with an existing session in this schedule")
 
 // ScheduleService handles schedule workflows.
 type ScheduleService struct {
@@ -80,6 +85,13 @@ func (s *ScheduleService) AdminDelete(ctx context.Context, id uint) error {
 
 // CreateSlot creates slot within schedule.
 func (s *ScheduleService) CreateSlot(ctx context.Context, scheduleID uint, payload dto.CreateSlotDTO) (*domain.Slot, error) {
+	overlap, err := s.repos.Slots.ExistsOverlap(ctx, scheduleID, payload.StartTime, payload.EndTime, 0)
+	if err != nil {
+		return nil, err
+	}
+	if overlap {
+		return nil, ErrSlotConflict
+	}
 	slot := &domain.Slot{
 		WeeklyScheduleID: scheduleID,
 		TrainingTypeID:   payload.TrainingTypeID,
@@ -104,6 +116,13 @@ func (s *ScheduleService) UpdateSlot(ctx context.Context, id uint, payload dto.C
 	slot, err := s.repos.Slots.GetByID(ctx, id)
 	if err != nil {
 		return nil, err
+	}
+	overlap, err := s.repos.Slots.ExistsOverlap(ctx, slot.WeeklyScheduleID, payload.StartTime, payload.EndTime, id)
+	if err != nil {
+		return nil, err
+	}
+	if overlap {
+		return nil, ErrSlotConflict
 	}
 	log.Printf("UpdateSlot: before update id=%d training_type_id=%d", id, slot.TrainingTypeID)
 	slot.TrainingTypeID = payload.TrainingTypeID

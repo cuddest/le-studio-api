@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"time"
 
 	"le-studio-api/internal/domain"
 	"le-studio-api/pkg/pagination"
@@ -77,6 +78,7 @@ type SlotRepository interface {
 	Create(ctx context.Context, slot *domain.Slot) error
 	GetByID(ctx context.Context, id uint) (*domain.Slot, error)
 	ListBySchedule(ctx context.Context, scheduleID uint, includeCancelled bool) ([]domain.Slot, error)
+	ExistsOverlap(ctx context.Context, scheduleID uint, startTime, endTime time.Time, excludeSlotID uint) (bool, error)
 	Update(ctx context.Context, slot *domain.Slot) error
 	Delete(ctx context.Context, id uint) error
 }

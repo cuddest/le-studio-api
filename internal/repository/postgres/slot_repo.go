@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"context"
+	"time"
 
 	"le-studio-api/internal/domain"
 
@@ -39,6 +40,24 @@ func (r *SlotRepo) ListBySchedule(ctx context.Context, scheduleID uint, includeC
 		return nil, err
 	}
 	return slots, nil
+}
+
+// ExistsOverlap reports whether any non-cancelled slot in the same schedule
+// overlaps the half-open interval [startTime, endTime). Pass excludeSlotID > 0
+// when updating to ignore the slot being modified.
+func (r *SlotRepo) ExistsOverlap(ctx context.Context, scheduleID uint, startTime, endTime time.Time, excludeSlotID uint) (bool, error) {
+	var count int64
+	q := r.db.WithContext(ctx).Model(&domain.Slot{}).
+		Where("weekly_schedule_id = ?", scheduleID).
+		Where("is_cancelled = ?", false).
+		Where("start_time < ? AND end_time > ?", endTime, startTime)
+	if excludeSlotID > 0 {
+		q = q.Where("id <> ?", excludeSlotID)
+	}
+	if err := q.Count(&count).Error; err != nil {
+		return false, err
+	}
+	return count > 0, nil
 }
 
 // Update saves slot changes.

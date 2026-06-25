@@ -164,6 +164,10 @@ func (h *ScheduleHandler) AdminCreateSlot(c *gin.Context) {
 	}
 	slot, err := h.svc.CreateSlot(c.Request.Context(), uint(id), payload)
 	if err != nil {
+		if errors.Is(err, service.ErrSlotConflict) {
+			response.Error(c, http.StatusConflict, "SLOT_CONFLICT", "Another session in this schedule already occupies that time range.", nil)
+			return
+		}
 		response.Error(c, http.StatusInternalServerError, "SLOT_CREATE_FAILED", "Unable to create slot.", nil)
 		return
 	}
@@ -189,6 +193,10 @@ func (h *ScheduleHandler) AdminUpdateSlot(c *gin.Context) {
 	log.Printf("AdminUpdateSlot: received payload for slot %s: training_type_id=%d, coach_id=%d, name=%s", c.Param("id"), payload.TrainingTypeID, payload.CoachID, payload.Name)
 	slot, err := h.svc.UpdateSlot(c.Request.Context(), uint(id), payload)
 	if err != nil {
+		if errors.Is(err, service.ErrSlotConflict) {
+			response.Error(c, http.StatusConflict, "SLOT_CONFLICT", "Another session in this schedule already occupies that time range.", nil)
+			return
+		}
 		response.Error(c, http.StatusInternalServerError, "SLOT_UPDATE_FAILED", "Unable to update slot.", nil)
 		return
 	}
